@@ -1,0 +1,29 @@
+Build:
+
+make
+
+Install:
+
+make install
+
+Run: 
+
+./shell
+
+Notes:
+
+The 'get' syntax is as per
+
+	get HOME
+
+rather than the Bourne standard of
+
+	echo $HOME
+
+Similarly 'set' syntax is as per
+
+	set HOME /home/seh
+
+rather than the Bourne standard of
+
+	HOME=/home/seh

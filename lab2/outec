@@ -1,0 +1,7 @@
+F S   UID   PID  PPID  C PRI  NI ADDR SZ WCHAN  TTY          TIME CMD
+0 S 334205 3647  3640  0  80   0 - 31487 do_wai pts/0    00:00:00 bash
+0 S 334205 11621 3647  0  80   0 -  1041 hrtime pts/0    00:00:00 a.out
+1 Z 334205 11622 11621  0 80   0 -     0 do_exi pts/0    00:00:00 a.out <defunct>
+0 R 334205 11625 3647  0  80   0 - 37235 -      pts/0    00:00:00 ps
+
+

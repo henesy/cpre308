@@ -1,0 +1,47 @@
+bash-4.2$ ./a.out 
+Child exited with status 113
+bash-4.2$ ./a.out 
+Child exited with status 113
+bash-4.2$ ./a.out 
+Child exited with signal 15
+bash-4.2$ ./a.out 
+Child exited with signal 15
+bash-4.2$ ./a.out 
+Child exited with status 224
+bash-4.2$ ./a.out 
+Child exited with status 25
+bash-4.2$ ./a.out 
+Child exited with status 91
+bash-4.2$ ./a.out 
+Child exited with signal 15
+bash-4.2$ ./a.out 
+Child exited with signal 15
+bash-4.2$ ./a.out 
+Child exited with signal 15
+bash-4.2$ ./a.out 
+Child exited with signal 15
+bash-4.2$ ./a.out 
+Child exited with signal 15
+bash-4.2$ ./a.out 
+Child exited with signal 15
+bash-4.2$ ./a.out 
+Child exited with signal 15
+bash-4.2$ ./a.out 
+Child exited with signal 15
+bash-4.2$ ./a.out 
+Child exited with signal 15
+bash-4.2$ ./a.out 
+Child exited with status 35
+bash-4.2$ ./a.out 
+Child exited with status 35
+bash-4.2$ ./a.out 
+Child exited with status 171
+bash-4.2$ ./a.out 
+Child exited with status 171
+bash-4.2$ ./a.out 
+Child exited with status 115
+bash-4.2$ ./a.out 
+Child exited with status 127
+bash-4.2$ ./a.out 
+Child exited with status 157
+

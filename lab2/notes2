@@ -1,0 +1,14 @@
+Process 5818’s parent process ID is 3647
+Process 5820’s parent process ID is 5818
+Process 5819’s parent process ID is 5818
+Process 5821’s parent process ID is 5819
+
+
+
+-- Removed sleep(2) --
+Process 6063’s parent process ID is 3647
+Process 6064’s parent process ID is 6063
+Process 6066’s parent process ID is 6064
+Process 6065’s parent process ID is 1
+
+
