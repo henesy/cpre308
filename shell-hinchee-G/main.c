@@ -8,6 +8,9 @@
 #define false 0
 #define nil NULL
 
+void
+split(char* line, char** out);
+
 /* shell is a novel shell written by seh for CPRE 308 section G */
 void
 main(int argc, char** argv)
@@ -74,7 +77,7 @@ main(int argc, char** argv)
 				printf("cd to: %s\n", buf);
 			if(chdir(buf) < 0)
 				printf("Error changing current working directory.\n");
-			free(buf);
+			//free(buf);
 
 		}else if(strncmp(in, "cd ", 3) == 0){
 			char* buf = calloc(253, sizeof(char));
@@ -188,9 +191,60 @@ main(int argc, char** argv)
 			/* check for command */
 			if(debug)
 				printf("Searching for command…\n");
+
+			// Check if we'll background the child
+			int len = strlen(in);
+			int bg = false;
+			if(in[len-1] == '&'){
+				bg = true;
+				in[len-1] = '\0';
+			}
+
+			// Process command
+			char* args[256];
+			split(in, args);
 			
+			// Handle fork
+			int pid;
+			int status;
+			pid = fork();
+			if(pid < 0){
+				printf("Error forking, are we out of PID\'s?\n");
+				exit(1);
+			}else if(pid == 0){
+				// Child
+				printf("%d\n", getpid());
+				int err = execvp(*args, args);
+				if(err < 0){
+					printf("Error executing command, is the command in $PATH?\n");
+					exit(2);
+				}
+			}else{
+				// Parent
+				if(!bg)
+					waitpid(pid, &status, 0);
+				// TODO -- be more verbose (man 2 wait)
+				// Fix this printing on a blank line
+				printf("Child exited, pid: %d, status: %d\n", pid, status);
+			}
+			
+			
+
 		}
 	}
 
 	printf("Goodbye! ☺\n");
+}
+
+void
+split(char* line, char** out)
+{
+	while(*line != '\0'){
+		while(*line == ' ' || *line == '\n' || *line =='\t')
+			*line++ = '\0';
+		*out++ = line;
+		while(*line != '\0' && *line != ' ' && *line != '\t' && *line != '\n')
+			line++;
+	}
+	*out = '\0';
 }

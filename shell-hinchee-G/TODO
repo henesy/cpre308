@@ -17,5 +17,5 @@ cmd
 3 y
 4 y
 5 y
-6 n (handle no name given)
-7 n (handle no name given)
+6 y
+7 n (split if a `NAME=` is present)
