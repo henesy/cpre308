@@ -40,8 +40,17 @@ main(int argc, char** argv)
 	int run = true;
 	while(run){
 		char in[256];
-		printf("%s", prompt);
+		int bgstatus = -1;
+		int bgpid = -1;
 		
+		// Check background process status (if any)
+		bgpid = waitpid(-1, &bgstatus, WNOHANG);
+		if(debug)
+			printf("Status of bg: %d\nPID of bg: %d\n", bgstatus, bgpid);
+		if(bgpid > 0)
+			printf("[%d] exited, status: %d\n", bgpid, bgstatus);
+		
+		printf("%s", prompt);
 		/* read input */
 		int i;
 		for(i=0;i<256;i++){
@@ -72,7 +81,7 @@ main(int argc, char** argv)
 		}else if(strcmp(in, "cd") == 0){
 			char* buf;
 			buf = getenv("HOME");
-			if(buf == NULL){
+			if(buf == nil){
 				printf("Error fetching $HOME. Is the variable set?\n");
 				continue;
 			}
@@ -181,7 +190,7 @@ main(int argc, char** argv)
 			
 			strncpy(name, in+4, 252);
 			value = getenv(name);
-			if(value == NULL){
+			if(value == nil){
 				printf("Error fetching %s. Is the variable set?\n", name);
 				free(name);
 				continue;
@@ -219,7 +228,7 @@ main(int argc, char** argv)
 				exit(1);
 			}else if(pid == 0){
 				// Child
-				printf("%d\n", getpid());
+				printf("[%d]\n", getpid());
 				int err = execvp(*args, args);
 				if(err < 0){
 					printf("Error executing command, is the command in $PATH?\n");
@@ -227,17 +236,15 @@ main(int argc, char** argv)
 				}
 			}else{
 				// Parent
-				if(!bg)
+				if(!bg){
 					waitpid(pid, &status, 0);
-				// TODO -- be more verbose (man 2 wait)
-				printf("Child exited, pid: %d, status: %d\n", pid, status);
+					// TODO -- be more verbose (man 2 wait)
+					printf("[%d] exited, status: %d\n", pid, status);
+				}
 			}
 			
-			
-
 		}
 	}
-
 	printf("Goodbye! ☺\n");
 }
 
