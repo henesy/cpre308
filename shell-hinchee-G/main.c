@@ -55,6 +55,9 @@ main(int argc, char** argv)
 		
 		if(debug)
 			printf("%s\n", in);
+		// Don't check empty commands
+		if(strlen(in) == 0)
+			continue;
 		
 		/* check for builtin */
 		if(strcmp(in, "exit") == 0){
@@ -190,7 +193,10 @@ main(int argc, char** argv)
 		}else{
 			/* check for command */
 			if(debug)
+				printf("Len of in: %d\n", strlen(in));
+			if(debug)
 				printf("Searching for command…\n");
+			
 
 			// Check if we'll background the child
 			int len = strlen(in);
@@ -224,7 +230,6 @@ main(int argc, char** argv)
 				if(!bg)
 					waitpid(pid, &status, 0);
 				// TODO -- be more verbose (man 2 wait)
-				// Fix this printing on a blank line
 				printf("Child exited, pid: %d, status: %d\n", pid, status);
 			}
 			
