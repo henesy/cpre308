@@ -5,8 +5,8 @@ H = shell.h
 %.o: %.c $(H)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-shell: main.o
-	gcc -o shell main.o -I.
+shell: main.o list.o
+	gcc -o shell main.o list.o -I.
 
 clean: 
 	rm *.o

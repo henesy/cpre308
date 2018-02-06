@@ -4,12 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "shell.h"
-#define true 1
-#define false 0
-#define nil NULL
 
-void
-split(char* line, char** out);
+void	split(char* line, char** out);
 
 /* shell is a novel shell written by seh for CPRE 308 section G */
 void
@@ -53,7 +49,7 @@ main(int argc, char** argv)
 		printf("%s", prompt);
 		/* read input */
 		int i;
-		for(i=0;i<256;i++){
+		for(i = 0; i < 256; i++){
 			int c = fgetc(stdin);
 			if(c == EOF || c == '\n'){
 				in[i] = '\0';
@@ -109,6 +105,7 @@ main(int argc, char** argv)
 			free(buf);
 
 		}else if(strncmp(in, "set", 3) == 0){
+			// TODO -- use split here
 			char* name = calloc(252, sizeof(char));
 			char* value = calloc(252, sizeof(char));
 			int valuePos = 0; //the array location of the first char of the value: 'set HOME xhome/seh'
@@ -122,7 +119,7 @@ main(int argc, char** argv)
 				continue;
 			}
 			
-			for(i=4;i<256;i++){
+			for(i = 4; i < 256; i++){
 				if(in[i] == ' '){
 					valuePos = i+1;
 					if(debug)
@@ -180,6 +177,7 @@ main(int argc, char** argv)
 			free(value);
 
 		}else if(strncmp(in, "get", 3) == 0){
+			// TODO -- use split here
 			char* name = calloc(252, sizeof(char));
 			char* value;
 			if((int)strlen(in) < 4){
@@ -248,6 +246,7 @@ main(int argc, char** argv)
 	printf("Goodbye! ☺\n");
 }
 
+// Split a command + args to: char**{cmd, arg0, arg1, …, argn}
 void
 split(char* line, char** out)
 {
@@ -259,4 +258,11 @@ split(char* line, char** out)
 			line++;
 	}
 	*out = '\0';
+}
+
+// Comparator to match a given Node type's PID to a given PID
+int
+findpid(void* Node, void* pid)
+{
+	
 }
