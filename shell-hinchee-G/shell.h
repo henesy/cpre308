@@ -32,10 +32,10 @@ struct List {
 List	mklist();
 
 // Append to a list
-int ladd(List*, int, char*);
+void ladd(List*, Proc*);
 
 // Search → delete from a list
-int ldel(List*, void*, int(*comp)(const void *, const void *));
+int ldel(List*, void*, int(*comp)(void *, void *));
 
 
 #endif
