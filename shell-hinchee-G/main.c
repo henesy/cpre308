@@ -142,16 +142,41 @@ main(int argc, char** argv)
 			}
 
 		}else if(strncmp(in, "set", 3) == 0){
-			// TODO -- use split here
-			char* name = calloc(252, sizeof(char));
+			/* This needs cleaning up, get and set are a serious mess */
+			char* full = calloc(256, sizeof(char));
+			strcpy(full, in);
+			char* out[256];
+			split(full, out);
+			if(debug)
+				printf("in: %s ;; out: %s\n", in, out[1]);
+			for(i = 1; i < 256; i++){
+				if(out[i] == nil){
+					if(debug)
+						printf("No args at/past %d\n", i);
+					break;
+				}
+				if(strlen(out[i]) < 1){
+					break;
+				}
+			}
+			int argloc = i;
+			if(argloc < 2){
+				printf("Error. Please specify a variable name.\n");
+				continue;
+			}
+			
+			char* name = out[1];
+			//char* name = calloc(252, sizeof(char));
 			char* value = calloc(252, sizeof(char));
 			int valuePos = 0; //the array location of the first char of the value: 'set HOME xhome/seh'
 			int err = 0;
 			int clear = false;
+			if(argloc == 2)
+				clear = true;
 			
 			if((int)strlen(in) < 4){
 				printf("Error. Please specify a variable to set.\n");
-				free(name);
+				//free(name);
 				free(value);
 				continue;
 			}
@@ -167,7 +192,7 @@ main(int argc, char** argv)
 				if(i == 255){
 					printf("Error. Please  specify a variable.\n");
 					err = 1;
-					free(name);
+					//free(name);
 					free(value);
 					break;
 				}
@@ -184,7 +209,7 @@ main(int argc, char** argv)
 				continue;
 				
 			if(!clear){
-				strncpy(name, in+4, valuePos-1-4);
+				//strncpy(name, in+4, valuePos-1-4);
 				strncpy(value, in+valuePos, 255-valuePos);
 				if(debug)
 					printf("Value: %s\n", value);
@@ -200,20 +225,19 @@ main(int argc, char** argv)
 				if(debug)
 					printf("Nstr: %s\nVstr: %s\n", nstr, vstr);
 			
-				free(vstr);
+				//free(vstr);
 				free(nstr);
 			} else {
 				strncpy(name, in+4, valuePos-1);
 				if(debug)
 					printf("Name: %s\n", name);
 				unsetenv(name);
-				free(name);
+				//free(name);
 			}
 
 			free(value);
 
 		}else if(strncmp(in, "get", 3) == 0){
-			// TODO -- use split here
 			char* name = calloc(252, sizeof(char));
 			char* value;
 			if((int)strlen(in) < 4){
@@ -311,7 +335,7 @@ main(int argc, char** argv)
 	printf("Goodbye! ☺\n");
 }
 
-// Split a command + args to: char**{cmd, arg0, arg1, …, argn}
+// Split a command + args to: char**{cmd, arg0, arg1, …, argn} ;; empty slots are nil
 void
 split(char* line, char** out)
 {
@@ -341,13 +365,13 @@ findpid(void* vproc, void* vpid)
 void
 evalstatus(int pid, int status)
 {
-	if (WIFEXITED(status)) {
+	if(WIFEXITED(status)){
 		printf("[%d] exited, status: %d\n", pid, WEXITSTATUS(status));
-	} else if (WIFSIGNALED(status)) {
+	}else if (WIFSIGNALED(status)){
 		printf("[%d] killed, signal: %d\n", pid, WTERMSIG(status));
-	} else if (WIFSTOPPED(status)) {
+	}else if (WIFSTOPPED(status)){
 		printf("[%d] stopped, signal %d\n", pid, WSTOPSIG(status));
-	} else if (WIFCONTINUED(status)) {
+	}else if (WIFCONTINUED(status)){
 		printf("[%d] continued, status %d\n", pid, status);
 	}
 }

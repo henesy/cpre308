@@ -27,3 +27,6 @@ Similarly 'set' syntax is as per
 rather than the Bourne standard of
 
 	HOME=/home/seh
+
+Notice: set must be used with one space after set and one space after the variable name (if a value is to be assigned).
+
