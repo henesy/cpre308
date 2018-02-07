@@ -8,32 +8,76 @@ mklist()
 }
 
 // Append to a list
-int
-ladd(List* l, int pid, char* name)
+void
+ladd(List* l, Proc* p)
 {
+	int i;
+	Node* new = malloc(sizeof(Node));
+	new->dat = (void*)p;
+	new->next = nil;
+	Node* n = l->root;
+	Node* prev = nil;
+	
+	if(l->size == 0){
+		l->root = new;
+		new->next = nil;
+		l->size++;
+		return;
+	}
+
+	for(i = 0; i < l->size; i++){
+		if(i != l->size-1)
+			n = n->next;
+	}
+	
+	n->next = new;
+	new->next = nil;
+	l->size++;
+	return;
 	
 }
 
 // Search → delete from a list
 int
-ldel(List* l, void* tofind, int(*comp)(const void *, const void *))
+ldel(List* l, void* tofind, int(*comp)(void *, void *))
 {
 	int i;
 	Node* n = l->root;
-	Node* prev = l->root;
+	Node* prev = nil;
+	
+	if(l->size == 0){
+		return false;
+	}
 
 	for(i = 0; i < l->size; i++){
 		if((*comp)(n->dat, tofind)){
 			if(l->size == 1){
+				free(n->dat);
 				free(n);
 				l->root = nil;
+			}else if(i == 0){
+				l->root = n->next;
+				// Do we need to free the child char*?
+				free(n->dat);
+				free(n);
+			}else if(i == l->size-1){
+				prev->next = nil;
+				free(n->dat);
+				free(n);
 			}else{
-				
+				// this is probably unsafe
+				prev->next = n->next;
+				free(n->dat);
+				free(n);
 			}
 			l->size--;
 			return true;
 		}
-		n = n->next;
+		
+		if(i != l->size-1)
+			n = n->next;
+		Node* prev = n;
+			
 	}
 	return false;
 }

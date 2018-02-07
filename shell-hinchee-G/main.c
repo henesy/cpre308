@@ -7,12 +7,15 @@
 
 void	split(char* line, char** out);
 
+int	findpid(void* Node, void* pid);
+
 /* shell is a novel shell written by seh for CPRE 308 section G */
 void
 main(int argc, char** argv)
 {
 	char* prompt = nil;
 	int debug = false;
+	List jobs = mklist();
 
 	/* arg processing */
 	int arg;
@@ -43,8 +46,10 @@ main(int argc, char** argv)
 		bgpid = waitpid(-1, &bgstatus, WNOHANG);
 		if(debug)
 			printf("Status of bg: %d\nPID of bg: %d\n", bgstatus, bgpid);
-		if(bgpid > 0)
+		if(bgpid > 0) {
 			printf("[%d] exited, status: %d\n", bgpid, bgstatus);
+			ldel(&jobs, &bgpid, findpid);
+		}
 		
 		printf("%s", prompt);
 		/* read input */
@@ -103,6 +108,30 @@ main(int argc, char** argv)
 			else
 				printf("Error getting current working directory.\n");
 			free(buf);
+
+		}else if(strcmp(in, "jobs") == 0){
+			Node* n = jobs.root;
+			
+			if(jobs.size == 0)
+				printf("No jobs to print.\n");
+			else if(jobs.size == 1){
+				Proc* p = (Proc*)jobs.root->dat;
+				printf("­\n");
+				printf("> %d | %s\n", p->pid, p->name);
+				printf("­\n");
+			}else{
+				printf("­\n");
+				for(i = 1; i < jobs.size+1; i++){
+					if(debug){
+						Proc* p = (Proc*)jobs.root->dat;
+						printf("Size of list: %d\nRoot info: %d ­ %s\n", jobs.size, p->pid, p->name);
+					}
+					Proc* p = (Proc*)n->dat;
+					printf("> %d | %s\n", p->pid, p->name);
+					n = n->next;
+				}
+				printf("­\n");
+			}
 
 		}else if(strncmp(in, "set", 3) == 0){
 			// TODO -- use split here
@@ -238,6 +267,13 @@ main(int argc, char** argv)
 					waitpid(pid, &status, 0);
 					// TODO -- be more verbose (man 2 wait)
 					printf("[%d] exited, status: %d\n", pid, status);
+				}else{
+					Proc* p = malloc(sizeof(Proc));
+					p->pid = pid;
+					char cmd[256];
+					strcpy(cmd, *args);
+					p->name = cmd;
+					ladd(&jobs, p);
 				}
 			}
 			
@@ -260,9 +296,14 @@ split(char* line, char** out)
 	*out = '\0';
 }
 
-// Comparator to match a given Node type's PID to a given PID
+// Comparator to match a given Proc type's PID to a given PID
 int
-findpid(void* Node, void* pid)
+findpid(void* vproc, void* vpid)
 {
-	
+	Proc* proc = (Proc*)vproc;
+	int* pid = (int*)vpid;
+	if(proc->pid == *pid){
+		return true;
+	}
+	return false;
 }
