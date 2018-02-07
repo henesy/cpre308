@@ -9,6 +9,8 @@ void	split(char* line, char** out);
 
 int	findpid(void* Node, void* pid);
 
+void	evalstatus(int pid, int status);
+
 /* shell is a novel shell written by seh for CPRE 308 section G */
 void
 main(int argc, char** argv)
@@ -47,10 +49,14 @@ main(int argc, char** argv)
 		if(debug)
 			printf("Status of bg: %d\nPID of bg: %d\n", bgstatus, bgpid);
 		if(bgpid > 0) {
-			printf("[%d] exited, status: %d\n", bgpid, bgstatus);
+			//printf("[%d] ended, status: %d\n", bgpid, bgstatus);
+			printf("Background Child… ");
+			evalstatus(bgpid, bgstatus);
 			ldel(&jobs, &bgpid, findpid);
 		}
 		
+		// Sleep to prevent output buffer being overrun by bgpid printing and prompt
+		usleep(100);
 		printf("%s", prompt);
 		/* read input */
 		int i;
@@ -116,21 +122,23 @@ main(int argc, char** argv)
 				printf("No jobs to print.\n");
 			else if(jobs.size == 1){
 				Proc* p = (Proc*)jobs.root->dat;
-				printf("­\n");
-				printf("> %d | %s\n", p->pid, p->name);
-				printf("­\n");
+				printf("­­­\n");
+				printf("   %-10s | %10s\n", "PID", "Name");
+				printf("%-10d | %10s\n", p->pid, p->name);
+				printf("­­­\n");
 			}else{
-				printf("­\n");
+				printf("­­­\n");
+				printf("   %-10s | %10s\n", "PID", "Name");
 				for(i = 1; i < jobs.size+1; i++){
 					if(debug){
 						Proc* p = (Proc*)jobs.root->dat;
 						printf("Size of list: %d\nRoot info: %d ­ %s\n", jobs.size, p->pid, p->name);
 					}
 					Proc* p = (Proc*)n->dat;
-					printf("> %d | %s\n", p->pid, p->name);
+					printf("%-10d | %10s\n", p->pid, p->name);
 					n = n->next;
 				}
-				printf("­\n");
+				printf("­­­\n");
 			}
 
 		}else if(strncmp(in, "set", 3) == 0){
@@ -174,9 +182,7 @@ main(int argc, char** argv)
 			}
 			if(err > 0)
 				continue;
-			
-			
-			
+				
 			if(!clear){
 				strncpy(name, in+4, valuePos-1-4);
 				strncpy(value, in+valuePos, 255-valuePos);
@@ -198,7 +204,8 @@ main(int argc, char** argv)
 				free(nstr);
 			} else {
 				strncpy(name, in+4, valuePos-1);
-				printf("Name: %s\n", name);
+				if(debug)
+					printf("Name: %s\n", name);
 				unsetenv(name);
 				free(name);
 			}
@@ -222,7 +229,28 @@ main(int argc, char** argv)
 				free(name);
 				continue;
 			}
-			printf("%s\n", value);
+			
+			// Locate if Name=Val tuple format ;; first validate Name= left hand side
+			char lefthand[256];
+			strcpy(lefthand, name);
+			int leftlen = strlen(name)+1;
+			lefthand[strlen(name)] = '=';
+			lefthand[strlen(name)+1] = '\0';
+			
+			int matches = true;
+			for(i = 0; i < leftlen && i < strlen(value); i++){
+				if(debug)
+					printf("left: %c\nvalue: %d\n", lefthand[i], value[i]);
+				if(lefthand[i] != value[i]){
+					matches = false;
+					break;
+				}
+			}
+			
+			if(matches)
+				printf("%s\n", value+i);
+			else
+				printf("%s\n", value);
 			free(name);
 			//free(value);
 
@@ -266,7 +294,8 @@ main(int argc, char** argv)
 				if(!bg){
 					waitpid(pid, &status, 0);
 					// TODO -- be more verbose (man 2 wait)
-					printf("[%d] exited, status: %d\n", pid, status);
+					//printf("[%d] exited, status: %d\n", pid, status);
+					evalstatus(pid, status);
 				}else{
 					Proc* p = malloc(sizeof(Proc));
 					p->pid = pid;
@@ -306,4 +335,19 @@ findpid(void* vproc, void* vpid)
 		return true;
 	}
 	return false;
+}
+
+// Evaluate and print details about a given status
+void
+evalstatus(int pid, int status)
+{
+	if (WIFEXITED(status)) {
+		printf("[%d] exited, status: %d\n", pid, WEXITSTATUS(status));
+	} else if (WIFSIGNALED(status)) {
+		printf("[%d] killed, signal: %d\n", pid, WTERMSIG(status));
+	} else if (WIFSTOPPED(status)) {
+		printf("[%d] stopped, signal %d\n", pid, WSTOPSIG(status));
+	} else if (WIFCONTINUED(status)) {
+		printf("[%d] continued, status %d\n", pid, status);
+	}
 }
