@@ -3,13 +3,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include "shell.h"
 
 void	split(char* line, char** out);
 
 int	findpid(void* Node, void* pid);
 
-void	evalstatus(int pid, int status);
+void	evalstatus(int pid, int status, char*);
 
 /* shell is a novel shell written by seh for CPRE 308 section G */
 void
@@ -21,7 +22,7 @@ main(int argc, char** argv)
 
 	/* arg processing */
 	int arg;
-	while((arg = getopt(argc, argv, "dp:")) != -1){
+	while((arg = getopt(argc, argv, "dhp:")) != -1){
 		switch(arg){
 		case 'p': 
 			prompt = optarg;
@@ -29,6 +30,8 @@ main(int argc, char** argv)
 		case 'd':
 			debug = true;
 			break;
+		case 'h':
+			fprintf(stdout, "usage: shell [-p prompt] [-d]\n");
 		default:
 			exit(1);
 		}
@@ -36,6 +39,9 @@ main(int argc, char** argv)
 
 	if(prompt == nil)
 		prompt = "308sh> ";
+	
+	//int truestdin = dup(0);
+	int truestdout = dup(1);
 
 	/* loop */
 	int run = true;
@@ -43,21 +49,37 @@ main(int argc, char** argv)
 		char in[256];
 		int bgstatus = -1;
 		int bgpid = -1;
+		int redir = -1;
+		FILE* outf = nil;
+		
+		dup2(truestdout, STDOUT_FILENO);
 		
 		// Check background process status (if any)
 		bgpid = waitpid(-1, &bgstatus, WNOHANG);
 		if(debug)
-			printf("Status of bg: %d\nPID of bg: %d\n", bgstatus, bgpid);
+			fprintf(stderr, "Status of bg: %d\nPID of bg: %d\n", bgstatus, bgpid);
 		if(bgpid > 0) {
-			//printf("[%d] ended, status: %d\n", bgpid, bgstatus);
-			printf("Background Child… ");
-			evalstatus(bgpid, bgstatus);
+			//fprintf(stderr, "[%d] ended, status: %d\n", bgpid, bgstatus);
+			char* bgname = calloc(256, sizeof(char));
+			Node* n = jobs.root;
+			int i;
+			for(i = 0; i < jobs.size; i++){
+				Proc* p = (Proc*)n->dat;
+				if(p->pid == bgpid){
+					strcpy(bgname, p->name);
+					break;
+				}
+				n = n->next;
+			}
+			fprintf(stderr, "Background Child End: ");
+			evalstatus(bgpid, bgstatus, bgname);
 			ldel(&jobs, &bgpid, findpid);
+			free(bgname);
 		}
 		
 		// Sleep to prevent output buffer being overrun by bgpid printing and prompt
 		usleep(100);
-		printf("%s", prompt);
+		fprintf(stdout, "%s", prompt);
 		/* read input */
 		int i;
 		for(i = 0; i < 256; i++){
@@ -66,79 +88,127 @@ main(int argc, char** argv)
 				in[i] = '\0';
 				break;
 			}
+			if(c == '>'){
+				if(debug)
+					fprintf(stderr, "Found redir at %d\n", i);
+				redir = i;
+			}
 			in[i] = c;
 		}
 		
+		/* check if we'll background the child */
+		int len = strlen(in);
+		int bg = false;
+		if(in[len-1] == '&'){
+			bg = true;
+			in[len-1] = '\0';
+		}
+		
+		
+		/* check for > redirection (this is hardcoded and bad, but works) */
+		if(redir > 0){
+			char* full = calloc(256, sizeof(char));
+			strcpy(full, in+redir);
+			char* fname[256];
+			if(debug)
+				fprintf(stderr, "redir to split: %s\n", full);
+			split(full, fname);
+			
+			if(fname[1] != nil)
+				outf = fopen(fname[1], "w+");
+			if(outf == nil && strlen(full) > 1){
+				// Format used was >test
+				outf = fopen(full+1, "w+");
+				if(debug)
+					fprintf(stderr, "0 Attempted to open %s for write.\n", fname[0]+1);
+				if(outf == nil){
+					fprintf(stderr, "Error opening %s for write. Did you specify a file?\n", full+1);
+					free(full);
+					continue;
+				}
+			}
+			if(outf == nil){
+				fprintf(stderr, "Error opening %s for write. Did you specify a file?\n", fname[1]);
+				free(full);
+				continue;
+			}
+			
+			in[redir-1] = '\0';
+			dup2(fileno(outf), STDOUT_FILENO);
+			fclose(outf);
+			free(full);
+		}
+		
 		if(debug)
-			printf("%s\n", in);
+			fprintf(stderr, "%s\n", in);
 		// Don't check empty commands
 		if(strlen(in) == 0)
 			continue;
 		
 		/* check for builtin */
-		if(strcmp(in, "exit") == 0){
+		if(strncmp(in, "exit", 4) == 0){
 			run = false;
 			continue;
-		}else if(strcmp(in, "pid") == 0){
-			printf("%d\n", getpid());
+		}else if(strncmp(in, "pid", 3) == 0){
+			fprintf(stdout, "%d\n", getpid());
 
-		}else if((in, "ppid") == 0){
-			printf("%d\n", getppid());
+		}else if(strncmp(in, "ppid", 4) == 0){
+			fprintf(stdout, "%d\n", getppid());
 
 		}else if(strcmp(in, "cd") == 0){
 			char* buf;
 			buf = getenv("HOME");
 			if(buf == nil){
-				printf("Error fetching $HOME. Is the variable set?\n");
+				fprintf(stderr, "Error fetching $HOME. Is the variable set?\n");
 				continue;
 			}
 			if(debug)
-				printf("cd to: %s\n", buf);
+				fprintf(stderr, "cd to: %s\n", buf);
 			if(chdir(buf) < 0)
-				printf("Error changing current working directory.\n");
+				fprintf(stderr, "Error changing current working directory.\n");
 			//free(buf);
 
 		}else if(strncmp(in, "cd ", 3) == 0){
 			char* buf = calloc(253, sizeof(char));
 			strncpy(buf, in+3, 253);
 			if(debug)
-				printf("cd to: %s\n", buf);
+				fprintf(stderr, "cd to: %s\n", buf);
 			if(chdir(buf) < 0)
-				printf("Error changing current working directory.\n");
+				fprintf(stderr, "Error changing current working directory.\n");
 			free(buf);
 
-		}else if(strcmp(in, "pwd") == 0){
+		}else if(strncmp(in, "pwd", 3) == 0){
 			char* buf = calloc(256, sizeof(char));
 			if(buf == getcwd(buf, 256))
-				printf("%s\n", buf);
+				fprintf(stdout, "%s\n", buf);
 			else
-				printf("Error getting current working directory.\n");
+				fprintf(stderr, "Error getting current working directory.\n");
 			free(buf);
 
-		}else if(strcmp(in, "jobs") == 0){
+		}else if(strncmp(in, "jobs", 4) == 0){
 			Node* n = jobs.root;
 			
 			if(jobs.size == 0)
-				printf("No jobs to print.\n");
+				fprintf(stdout, "No jobs to print.\n");
 			else if(jobs.size == 1){
 				Proc* p = (Proc*)jobs.root->dat;
-				printf("­­­\n");
-				printf("   %-10s | %10s\n", "PID", "Name");
-				printf("%-10d | %10s\n", p->pid, p->name);
-				printf("­­­\n");
+				fprintf(stdout, "­­­\n");
+				fprintf(stdout, "   %-10s | %10s\n", "PID", "Name");
+				fprintf(stdout, "%-10d | %10s\n", p->pid, p->name);
+				fprintf(stdout, "­­­\n");
 			}else{
-				printf("­­­\n");
-				printf("   %-10s | %10s\n", "PID", "Name");
+				fprintf(stdout, "­­­\n");
+				fprintf(stdout, "   %-10s | %10s\n", "PID", "Name");
 				for(i = 1; i < jobs.size+1; i++){
 					if(debug){
 						Proc* p = (Proc*)jobs.root->dat;
-						printf("Size of list: %d\nRoot info: %d ­ %s\n", jobs.size, p->pid, p->name);
+						fprintf(stdout, "Size of list: %d\nRoot info: %d ­ %s\n", jobs.size, p->pid, p->name);
 					}
 					Proc* p = (Proc*)n->dat;
-					printf("%-10d | %10s\n", p->pid, p->name);
+					fprintf(stdout, "%-10d | %10s\n", p->pid, p->name);
 					n = n->next;
 				}
-				printf("­­­\n");
+				fprintf(stdout, "­­­\n");
 			}
 
 		}else if(strncmp(in, "set", 3) == 0){
@@ -148,11 +218,11 @@ main(int argc, char** argv)
 			char* out[256];
 			split(full, out);
 			if(debug)
-				printf("in: %s ;; out: %s\n", in, out[1]);
+				fprintf(stderr, "in: %s ;; out: %s\n", in, out[1]);
 			for(i = 1; i < 256; i++){
 				if(out[i] == nil){
 					if(debug)
-						printf("No args at/past %d\n", i);
+						fprintf(stderr, "No args at/past %d\n", i);
 					break;
 				}
 				if(strlen(out[i]) < 1){
@@ -161,23 +231,26 @@ main(int argc, char** argv)
 			}
 			int argloc = i;
 			if(argloc < 2){
-				printf("Error. Please specify a variable name.\n");
+				fprintf(stderr, "Error. Please specify a variable name.\n");
+				free(full);
 				continue;
 			}
 			
 			char* name = out[1];
 			//char* name = calloc(252, sizeof(char));
 			char* value = calloc(252, sizeof(char));
-			int valuePos = 0; //the array location of the first char of the value: 'set HOME xhome/seh'
+			// The array location of the first char of the value: 'set HOME xhome/seh'
+			int valuePos = 0;
 			int err = 0;
 			int clear = false;
 			if(argloc == 2)
 				clear = true;
 			
 			if((int)strlen(in) < 4){
-				printf("Error. Please specify a variable to set.\n");
+				fprintf(stderr, "Error. Please specify a variable to set.\n");
 				//free(name);
 				free(value);
+				free(full);
 				continue;
 			}
 			
@@ -185,12 +258,12 @@ main(int argc, char** argv)
 				if(in[i] == ' '){
 					valuePos = i+1;
 					if(debug)
-						printf("space found at: %d\n", i);
+						fprintf(stderr, "space found at: %d\n", i);
 					break;
 				}
 				
 				if(i == 255){
-					printf("Error. Please  specify a variable.\n");
+					fprintf(stderr, "Error. Please  specify a variable.\n");
 					err = 1;
 					//free(name);
 					free(value);
@@ -199,20 +272,22 @@ main(int argc, char** argv)
 				// No value, so we clear the var
 				if(in[i] == '\0'){
 					if(debug)
-						printf("null term at: %d\n", i);
+						fprintf(stderr, "null term at: %d\n", i);
 					valuePos = i-2;
 					clear = true;
 					break;
 				}
 			}
-			if(err > 0)
+			if(err > 0){
+				free(full);
 				continue;
+			}
 				
 			if(!clear){
 				//strncpy(name, in+4, valuePos-1-4);
 				strncpy(value, in+valuePos, 255-valuePos);
 				if(debug)
-					printf("Value: %s\n", value);
+					fprintf(stderr, "Value: %s\n", value);
 				
 				char* nstr = malloc(sizeof(name));
 				strcpy(nstr, name);
@@ -220,28 +295,29 @@ main(int argc, char** argv)
 				char* vstr = strcat(strcat(name, "="), value);
 				err = setenv(nstr, vstr, 1);
 				if(err > 0)
-					printf("Error. No variable set!\n");
+					fprintf(stderr, "Error. No variable set!\n");
 				
 				if(debug)
-					printf("Nstr: %s\nVstr: %s\n", nstr, vstr);
+					fprintf(stderr, "Nstr: %s\nVstr: %s\n", nstr, vstr);
 			
 				//free(vstr);
 				free(nstr);
 			} else {
 				strncpy(name, in+4, valuePos-1);
 				if(debug)
-					printf("Name: %s\n", name);
+					fprintf(stderr, "Name: %s\n", name);
 				unsetenv(name);
 				//free(name);
 			}
 
 			free(value);
+			free(full);
 
 		}else if(strncmp(in, "get", 3) == 0){
 			char* name = calloc(252, sizeof(char));
 			char* value;
 			if((int)strlen(in) < 4){
-				printf("Error. Please specify a variable to get.\n");
+				fprintf(stderr, "Error. Please specify a variable to get.\n");
 				free(name);
 				continue;
 			}
@@ -249,7 +325,10 @@ main(int argc, char** argv)
 			strncpy(name, in+4, 252);
 			value = getenv(name);
 			if(value == nil){
-				printf("Error fetching %s. Is the variable set?\n", name);
+				if(name[0] == ' ' || name[0] == '\t')
+					fprintf(stderr, "Error. You can't make a variable name out of whitespace. Whitespace for variable naming is considered harmful.\n");
+				else
+					fprintf(stderr, "Error fetching %s. Is the variable set?\n", name);
 				free(name);
 				continue;
 			}
@@ -264,7 +343,7 @@ main(int argc, char** argv)
 			int matches = true;
 			for(i = 0; i < leftlen && i < strlen(value); i++){
 				if(debug)
-					printf("left: %c\nvalue: %d\n", lefthand[i], value[i]);
+					fprintf(stderr, "left: %c\nvalue: %d\n", lefthand[i], value[i]);
 				if(lefthand[i] != value[i]){
 					matches = false;
 					break;
@@ -272,27 +351,18 @@ main(int argc, char** argv)
 			}
 			
 			if(matches)
-				printf("%s\n", value+i);
+				fprintf(stdout, "%s\n", value+i);
 			else
-				printf("%s\n", value);
+				fprintf(stdout, "%s\n", value);
 			free(name);
 			//free(value);
 
 		}else{
 			/* check for command */
 			if(debug)
-				printf("Len of in: %d\n", strlen(in));
+				fprintf(stderr, "Len of in: %d\n", strlen(in));
 			if(debug)
-				printf("Searching for command…\n");
-			
-
-			// Check if we'll background the child
-			int len = strlen(in);
-			int bg = false;
-			if(in[len-1] == '&'){
-				bg = true;
-				in[len-1] = '\0';
-			}
+				fprintf(stderr, "Searching for command…\n");
 
 			// Process command
 			char* args[256];
@@ -303,14 +373,14 @@ main(int argc, char** argv)
 			int status;
 			pid = fork();
 			if(pid < 0){
-				printf("Error forking, are we out of PID\'s?\n");
+				fprintf(stderr, "Error forking, are we out of PID\'s?\n");
 				exit(1);
 			}else if(pid == 0){
 				// Child
-				printf("[%d]\n", getpid());
+				fprintf(stderr, "[%d] %s\n", getpid(), *args);
 				int err = execvp(*args, args);
 				if(err < 0){
-					printf("Error executing command, is the command in $PATH?\n");
+					fprintf(stderr, "Error executing command, is the command in $PATH?\n");
 					exit(2);
 				}
 			}else{
@@ -318,8 +388,8 @@ main(int argc, char** argv)
 				if(!bg){
 					waitpid(pid, &status, 0);
 					// TODO -- be more verbose (man 2 wait)
-					//printf("[%d] exited, status: %d\n", pid, status);
-					evalstatus(pid, status);
+					//fprintf(stderr, "[%d] exited, status: %d\n", pid, status);
+					evalstatus(pid, status, *args);
 				}else{
 					Proc* p = malloc(sizeof(Proc));
 					p->pid = pid;
@@ -332,7 +402,7 @@ main(int argc, char** argv)
 			
 		}
 	}
-	printf("Goodbye! ☺\n");
+	fprintf(stderr, "Goodbye! ☺\n");
 }
 
 // Split a command + args to: char**{cmd, arg0, arg1, …, argn} ;; empty slots are nil
@@ -363,15 +433,15 @@ findpid(void* vproc, void* vpid)
 
 // Evaluate and print details about a given status
 void
-evalstatus(int pid, int status)
+evalstatus(int pid, int status, char* name)
 {
 	if(WIFEXITED(status)){
-		printf("[%d] exited, status: %d\n", pid, WEXITSTATUS(status));
+		fprintf(stderr, "[%d] %s exited, status: %d\n", pid, name, WEXITSTATUS(status));
 	}else if (WIFSIGNALED(status)){
-		printf("[%d] killed, signal: %d\n", pid, WTERMSIG(status));
+		fprintf(stderr, "[%d] %s killed, signal: %d\n", pid, name, WTERMSIG(status));
 	}else if (WIFSTOPPED(status)){
-		printf("[%d] stopped, signal %d\n", pid, WSTOPSIG(status));
+		fprintf(stderr, "[%d] %s stopped, signal %d\n", pid, name, WSTOPSIG(status));
 	}else if (WIFCONTINUED(status)){
-		printf("[%d] continued, status %d\n", pid, status);
+		fprintf(stderr, "[%d] %s continued, status %d\n", pid, name, status);
 	}
 }

@@ -52,16 +52,20 @@ ldel(List* l, void* tofind, int(*comp)(void *, void *))
 	for(i = 0; i < l->size; i++){
 		if((*comp)(n->dat, tofind)){
 			if(l->size == 1){
+				// 1 node
 				free(n->dat);
 				free(n);
 				l->root = nil;
 			}else if(i == 0){
+				// 0 nodes
 				l->root = n->next;
-				// Do we need to free the child char*?
 				free(n->dat);
 				free(n);
 			}else if(i == l->size-1){
-				prev->next = nil;
+				// We are the last node
+				/* BUG: segfault in finding if sleep 10 → sleep 5; ok if sleep 5 → sleep 10 
+					Temporary fix: comment out line and break spec for list.	*/
+				//prev->next = nil;
 				free(n->dat);
 				free(n);
 			}else{
