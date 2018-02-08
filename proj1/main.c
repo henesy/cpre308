@@ -39,7 +39,6 @@ main(int argc, char** argv)
 	if(prompt == nil)
 		prompt = "308sh> ";
 	
-	//int truestdin = dup(0);
 	int truestdout = dup(1);
 
 	/* loop */

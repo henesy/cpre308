@@ -64,5 +64,5 @@ Notice: A space must separate the command and the '>' character as to define tha
 
 * Backgrounding is done via adding an ampersand (&) to the end of a command. The ampersand must have a space preceding it as to define that backgrounding is intended.
 
-Notice: Backgrounding with redirection to a file works! Try: cat /dev/urandom > mytestfile &
+Notice: Backgrounding with redirection to a file works! Try: cat /dev/urandom > mytestfile &. Additionally, if you wish to background a process, allow no stray whitespace after the & symbol.
 

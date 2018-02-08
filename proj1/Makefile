@@ -1,3 +1,4 @@
+# run 'make' without the quotes to compile.
 CC=gcc
 CFLAGS=-I. -ggdb
 H = shell.h
