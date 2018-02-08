@@ -61,3 +61,5 @@ or
 	echo hi >test
 
 Notice: A space must separate the command and the '>' character as to define that redirection is intended. Redirection to things other than files or usage of '<' is not supported. 
+
+* Backgrounding is done via adding an ampersand (&) to the end of a command. The ampersand must have a space preceding it as to define that backgrounding is intended.

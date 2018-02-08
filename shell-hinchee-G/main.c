@@ -6,10 +6,9 @@
 #include <errno.h>
 #include "shell.h"
 
+/* function prototype bloc */
 void	split(char* line, char** out);
-
 int	findpid(void* Node, void* pid);
-
 void	evalstatus(int pid, int status, char*);
 
 /* shell is a novel shell written by seh for CPRE 308 section G */
@@ -80,6 +79,7 @@ main(int argc, char** argv)
 		// Sleep to prevent output buffer being overrun by bgpid printing and prompt
 		usleep(100);
 		fprintf(stdout, "%s", prompt);
+
 		/* read input */
 		int i;
 		for(i = 0; i < 256; i++){
@@ -101,9 +101,8 @@ main(int argc, char** argv)
 		int bg = false;
 		if(in[len-1] == '&'){
 			bg = true;
-			in[len-1] = '\0';
+			in[len-2] = '\0';
 		}
-		
 		
 		/* check for > redirection (this is hardcoded and bad, but works) */
 		if(redir > 0){
@@ -149,6 +148,7 @@ main(int argc, char** argv)
 		if(strncmp(in, "exit", 4) == 0){
 			run = false;
 			continue;
+
 		}else if(strncmp(in, "pid", 3) == 0){
 			fprintf(stdout, "%d\n", getpid());
 
@@ -166,7 +166,6 @@ main(int argc, char** argv)
 				fprintf(stderr, "cd to: %s\n", buf);
 			if(chdir(buf) < 0)
 				fprintf(stderr, "Error changing current working directory.\n");
-			//free(buf);
 
 		}else if(strncmp(in, "cd ", 3) == 0){
 			char* buf = calloc(253, sizeof(char));
@@ -193,12 +192,12 @@ main(int argc, char** argv)
 			else if(jobs.size == 1){
 				Proc* p = (Proc*)jobs.root->dat;
 				fprintf(stdout, "­­­\n");
-				fprintf(stdout, "   %-10s | %10s\n", "PID", "Name");
+				fprintf(stdout, "%-10s | %10s\n", "PID", "Name");
 				fprintf(stdout, "%-10d | %10s\n", p->pid, p->name);
 				fprintf(stdout, "­­­\n");
 			}else{
 				fprintf(stdout, "­­­\n");
-				fprintf(stdout, "   %-10s | %10s\n", "PID", "Name");
+				fprintf(stdout, "%-10s | %10s\n", "PID", "Name");
 				for(i = 1; i < jobs.size+1; i++){
 					if(debug){
 						Proc* p = (Proc*)jobs.root->dat;
@@ -212,7 +211,7 @@ main(int argc, char** argv)
 			}
 
 		}else if(strncmp(in, "set", 3) == 0){
-			/* This needs cleaning up, get and set are a serious mess */
+			/* get and set are kind of a mess */
 			char* full = calloc(256, sizeof(char));
 			strcpy(full, in);
 			char* out[256];
@@ -237,7 +236,6 @@ main(int argc, char** argv)
 			}
 			
 			char* name = out[1];
-			//char* name = calloc(252, sizeof(char));
 			char* value = calloc(252, sizeof(char));
 			// The array location of the first char of the value: 'set HOME xhome/seh'
 			int valuePos = 0;
@@ -248,7 +246,6 @@ main(int argc, char** argv)
 			
 			if((int)strlen(in) < 4){
 				fprintf(stderr, "Error. Please specify a variable to set.\n");
-				//free(name);
 				free(value);
 				free(full);
 				continue;
@@ -265,10 +262,10 @@ main(int argc, char** argv)
 				if(i == 255){
 					fprintf(stderr, "Error. Please  specify a variable.\n");
 					err = 1;
-					//free(name);
 					free(value);
 					break;
 				}
+
 				// No value, so we clear the var
 				if(in[i] == '\0'){
 					if(debug)
@@ -278,13 +275,13 @@ main(int argc, char** argv)
 					break;
 				}
 			}
+
 			if(err > 0){
 				free(full);
 				continue;
 			}
 				
 			if(!clear){
-				//strncpy(name, in+4, valuePos-1-4);
 				strncpy(value, in+valuePos, 255-valuePos);
 				if(debug)
 					fprintf(stderr, "Value: %s\n", value);
@@ -300,14 +297,12 @@ main(int argc, char** argv)
 				if(debug)
 					fprintf(stderr, "Nstr: %s\nVstr: %s\n", nstr, vstr);
 			
-				//free(vstr);
 				free(nstr);
 			} else {
 				strncpy(name, in+4, valuePos-1);
 				if(debug)
 					fprintf(stderr, "Name: %s\n", name);
 				unsetenv(name);
-				//free(name);
 			}
 
 			free(value);
@@ -355,7 +350,6 @@ main(int argc, char** argv)
 			else
 				fprintf(stdout, "%s\n", value);
 			free(name);
-			//free(value);
 
 		}else{
 			/* check for command */
@@ -387,10 +381,9 @@ main(int argc, char** argv)
 				// Parent
 				if(!bg){
 					waitpid(pid, &status, 0);
-					// TODO -- be more verbose (man 2 wait)
-					//fprintf(stderr, "[%d] exited, status: %d\n", pid, status);
 					evalstatus(pid, status, *args);
 				}else{
+					// Add bg child to jobs list
 					Proc* p = malloc(sizeof(Proc));
 					p->pid = pid;
 					char cmd[256];
@@ -399,7 +392,6 @@ main(int argc, char** argv)
 					ladd(&jobs, p);
 				}
 			}
-			
 		}
 	}
 	fprintf(stderr, "Goodbye! ☺\n");
@@ -435,6 +427,7 @@ findpid(void* vproc, void* vpid)
 void
 evalstatus(int pid, int status, char* name)
 {
+	// Stopped and Continued aren't actually used by the shell, but exist for posterity
 	if(WIFEXITED(status)){
 		fprintf(stderr, "[%d] %s exited, status: %d\n", pid, name, WEXITSTATUS(status));
 	}else if (WIFSIGNALED(status)){
