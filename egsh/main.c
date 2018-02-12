@@ -1,6 +1,6 @@
 #include <u.h>
 #include <libc.h>
-#include <stdio.h>
+#include <bio.h>
 #include "shell.h"
 
 /* function prototype bloc */
@@ -42,42 +42,17 @@ main(int argc, char** argv)
 		//Waitmsg* bgm;
 		int redir = -1;
 		int outf = -1;
-		
-		/*
-		// Check background process status (if any)
-		bgm->pid = waitpid(-1, &bgstatus, WNOHANG);
-
-		if(debug)
-			fprint(2, "Status of bg: %s\nPID of bg: %d\n", bgm->msg, bgm->pid);
-		if(bgm->pid > 0) {
-			//fprint(2, "[%d] ended, status: %d\n", bgm->pid, bgstatus);
-			char* bgname = calloc(256, sizeof(char));
-			Node* n = jobs.root;
-			int i;
-			for(i = 0; i < jobs.size; i++){
-				Proc* p = (Proc*)n->dat;
-				if(p->pid == bgm->pid){
-					strcpy(bgname, p->name);
-					break;
-				}
-				n = n->next;
-			}
-
-			fprint(2, "Child exited… [%d] %s\n", bgm->pid, bgm->msg);
-			ldel(&jobs, &bgm->pid, findpid);
-			free(bgname);
-		}
-		*/
+		Biobuf* bp = Bfdopen(0, OREAD);
+		int i;
 		
 		// Sleep to prevent output buffer being overrun by bgm->pid printing and prompt
 		sleep(100);
 		fprint(fd, "%s", prompt);
 
 		/* read input */
-		int i;
 		for(i = 0; i < 256; i++){
-			int c = fgetc(stdin);
-			if(c == EOF || c == '\n'){
+			Rune c = Bgetrune(bp);
+			if(c == '\n'){
 				in[i] = '\0';
 				break;
 			}
@@ -89,8 +64,17 @@ main(int argc, char** argv)
 			in[i] = c;
 		}
 		
+		if(debug)
+			fprint(2, "In is: %s\n", in);
+		
+		/* check if , '\004' is EOT */
+		if(in[0] == -1){
+			run = false;
+			continue;
+		}
+		
 		/* check if we'll background the child */
-		int len = strlen(in);
+		long len = 256.0;
 		int bg = false;
 		if(in[len-1] == '&'){
 			bg = true;
@@ -150,9 +134,9 @@ main(int argc, char** argv)
 
 		}else if(strcmp(in, "cd") == 0){
 			char* buf;
-			buf = getenv("HOME");
+			buf = getenv("home");
 			if(buf == nil){
-				fprint(2, "Error fetching $HOME. Is the variable set?\n");
+				fprint(2, "Error fetching $home. Is the variable set?\n");
 				continue;
 			}
 			if(debug)
@@ -230,7 +214,7 @@ main(int argc, char** argv)
 			
 			char* name = out[1];
 			char* value = calloc(252, sizeof(char));
-			// The array location of the first char of the value: 'set HOME xhome/seh'
+			// The array location of the first char of the value: 'set home x/usr/seh'
 			int valuePos = 0;
 			int err = 0;
 			int clear = false;
@@ -316,27 +300,7 @@ main(int argc, char** argv)
 				continue;
 			}
 			
-			// Locate if Name=Val tuple format ;; first validate Name= left hand side
-			char lefthand[256];
-			strcpy(lefthand, name);
-			int leftlen = strlen(name)+1;
-			lefthand[strlen(name)] = '=';
-			lefthand[strlen(name)+1] = '\0';
-			
-			int matches = true;
-			for(i = 0; i < leftlen && i < strlen(value); i++){
-				if(debug)
-					fprint(2, "left: %c\nvalue: %d\n", lefthand[i], value[i]);
-				if(lefthand[i] != value[i]){
-					matches = false;
-					break;
-				}
-			}
-			
-			if(matches)
-				fprint(fd, "%s\n", value+i);
-			else
-				fprint(fd, "%s\n", value);
+			fprint(fd, "%s\n", value);
 			free(name);
 
 		}else{
@@ -359,10 +323,56 @@ main(int argc, char** argv)
 			}else if(pid == 0){
 				// Child
 				fprint(2, "[%d] %s\n", getpid(), *args);
-				// TODO -- search $path
-				int err = exec(*args, args);
+
+				if((*args)[0] == '/')
+					goto NOSRCH;
+				
+				// Search $path
+				char* path[256];
+				char* opath;
+				int err;
+
+				opath = getenv("path");
+				if(path == nil){
+					fprint(2, "Error fetching $path. Is the variable set?\n");
+				}
+				split(opath, path);
+				
+				int j;
+				for(j = 0; j < 256; j++){
+					if(path[j] == nil){
+						fprint(2, "Command not in $path. Provide full path.\n");
+						break;
+					}
+					
+					// lsdot code courtesy of nemo
+					Dir* dents;
+					int ndents, fd, i;
+					
+					fd = open(path[j], OREAD);
+					if (fd < 0)
+						sysfatal("Error opening dir: %r");
+					for(;;){
+						ndents = dirread(fd, &dents);
+						if (ndents == 0)
+							break;
+						for (i = 0; i < ndents; i++){
+							if(strcmp(dents[i].name, *args) == 0){
+								// Found command
+								err = exec(strcat(path[j], strcat("/", *args)), args);
+								free(dents);
+								goto PATHD;
+							}
+						}
+						free(dents);
+					}
+				}
+				NOSRCH:;
+				
+
+				err = exec(*args, args);
+				PATHD:;
 				if(err < 0){
-					fprint(2, "Error executing command, is the command in $PATH?\n");
 					exits("Error executing command.");
 				}
 			}else{
@@ -372,7 +382,7 @@ main(int argc, char** argv)
 					Waitmsg* m;
 
 					while(m = wait()){
-						fprint(2, "Child exited… [%d] %s\n", pid, m->msg);
+						fprint(2, "[%d] %s\n", m->pid, m->msg);
 						if (m->pid == pid){
 							free(m);
 							break;
