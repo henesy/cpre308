@@ -15,7 +15,7 @@ main(int argc, char** argv)
 	int debug = false;
 	List jobs = mklist();
 	// This is standard out
-	int fd = 1;
+	int fd;
 
 	/* arg processing */
 	ARGBEGIN {
@@ -35,6 +35,9 @@ main(int argc, char** argv)
 	if(prompt == nil)
 		prompt = "308sh> ";
 
+	int cons = open("/dev/cons", OWRITE);
+	fd = cons;
+
 	/* loop */
 	int run = true;
 	while(run){
@@ -44,6 +47,9 @@ main(int argc, char** argv)
 		int outf = -1;
 		Biobuf* bp = Bfdopen(0, OREAD);
 		int i;
+		if(fd != cons)
+			close(fd);
+		fd = cons;
 		
 		// Sleep to prevent output buffer being overrun by bgm->pid printing and prompt
 		sleep(100);
@@ -91,10 +97,10 @@ main(int argc, char** argv)
 			split(full, fname);
 			
 			if(fname[1] != nil)
-				outf = open(fname[1], ORDWR);
+				outf = create(fname[1], ORDWR, 0666);
 			if(outf == -1 && strlen(full) > 1){
 				// Format used was >test
-				outf = open(full+1, ORDWR);
+				outf = create(full+1, ORDWR, 0666);
 				if(debug)
 					fprint(2, "0 Attempted to open %s for write.\n", fname[0]+1);
 				if(outf == -1){
@@ -110,8 +116,7 @@ main(int argc, char** argv)
 			}
 			
 			in[redir-1] = '\0';
-			dup(outf, fd);
-			close(outf);
+			fd = outf;
 			free(full);
 		}
 		
@@ -323,6 +328,7 @@ main(int argc, char** argv)
 			}else if(pid == 0){
 				// Child
 				fprint(2, "[%d] %s\n", getpid(), *args);
+				dup(fd, 1);
 
 				if((*args)[0] == '/')
 					goto NOSRCH;
