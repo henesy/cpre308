@@ -63,9 +63,7 @@ ldel(List* l, void* tofind, int(*comp)(void *, void *))
 				free(n);
 			}else if(i == l->size-1){
 				// We are the last node
-				/* BUG: segfault in finding if sleep 10 → sleep 5; ok if sleep 5 → sleep 10 
-					Temporary fix: comment out line and break spec for list.	*/
-				//prev->next = nil;
+				prev->next = nil;
 				free(n->dat);
 				free(n);
 			}else{
@@ -78,10 +76,9 @@ ldel(List* l, void* tofind, int(*comp)(void *, void *))
 			return true;
 		}
 		
+		prev = n;
 		if(i != l->size-1)
 			n = n->next;
-		Node* prev = n;
-			
 	}
 	return false;
 }
