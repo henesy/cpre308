@@ -1,0 +1,26 @@
+#1.2
+
+% ./a.out
+After both threads are done executing, `shared` = 1213533
+
+Expected: 2,000,000
+Calculated: 1,213,533
+
+The discrepancy is due to there not being a lock on shared and thus, the two threads running over each other on reading/writing values to 'shared.' 
+
+#1.2.1
+
+% ./a.out
+After both threads are done executing, `shared` = 2000000
+
+Yes, the mutex now guarantees that both threads can cleanly could to 2,000,000 as they will both alternate cleanly all the way through their allocated data ranges. 
+
+Optimally, the code should probably be a counter to one million rather than two million.
+
+#1.3.1 
+
+There will need to be a signal to show that the producer has relented and C1 can lock in. Then, there will need to be a signal to show that C1 has relented and C2 can lock in. Then, there will need to be a signal to show that C2 has relented and P can produce again. 
+∴ There are n conditions where n is the number of actors. 
+
+#2.1
+
