@@ -1,0 +1,11 @@
+# This is the runtime configuration file for the print server that is
+# used in labs 5-7 of CprE 308.
+
+PRINTER_GROUP black_white
+PRINTER printer/drivers/printer0
+#PRINTER printer0
+#PRINTER printer1
+#PRINTER printer2
+
+PRINTER_GROUP color
+PRINTER printer/drivers/printer3
