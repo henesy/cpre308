@@ -39,7 +39,7 @@ int exit_flag = 0;
 char* logname = NULL;
 FILE* logfile = NULL;
 int logtf = false;
-pthread_cond_t consumer_cv;
+//pthread_cond_t consumer_cv;
 int supply = 0;
 int first = true;
 
@@ -62,6 +62,8 @@ struct print_job_list
 	sem_t num_jobs;
 	// a lock for the list
 	pthread_mutex_t lock;
+	// an event for the list
+	pthread_cond_t cv;
 };
 
 /**
@@ -118,9 +120,9 @@ void *printer_thread(void* param)
 		// We should wait to be signalled
 		fprintf(logfile, "Consumer waiting for event signal!\n");
 		/*while(supply == 0){
-			pthread_cond_wait(&consumer_cv, &this->job_queue->lock);
+			pthread_cond_wait(&this->job_queue->cv, &this->job_queue->lock);
 		}*/
-		pthread_cond_wait(&consumer_cv, &this->job_queue->lock);
+		pthread_cond_wait(&this->job_queue->cv, &this->job_queue->lock);
 
 		fprintf(logfile, "Consumer got signalled!\n");
 		
@@ -275,7 +277,7 @@ void * producer_thread(void * param)
 					pthread_mutex_unlock(&g->job_queue.lock);
 					fprintf(logfile, "Producer unlocked mutex!\n");
 					supply += 1;
-					pthread_cond_broadcast(&consumer_cv);
+					pthread_cond_broadcast(&g->job_queue.cv);
 					fprintf(logfile, "Broadcast for consumption!\n");
 				}
 			}
@@ -289,7 +291,7 @@ void * producer_thread(void * param)
 		{
 			exit_flag = 1;
 			fprintf(logfile, "Found EXIT directive! Producer going down!\n");
-			//pthread_cond_broadcast(&consumer_cv);
+			//pthread_cond_broadcast(&g->job_queue.cv);
 			return NULL;
 		}
 	}
@@ -331,6 +333,7 @@ int main(int argc, char* argv[])
 	{
 		sem_init(&g->job_queue.num_jobs, 0, 0);
 		pthread_mutex_init(&g->job_queue.lock, NULL);
+		pthread_cond_init(&g->job_queue.cv, NULL);
 		
 		// for each printer in the group
 		for(p = g->printer_queue; p; p = p->next)
@@ -346,7 +349,7 @@ int main(int argc, char* argv[])
 	pthread_create(&producer_tid, NULL, producer_thread, NULL);
 	
 	//-- Initialize events
-	pthread_cond_init(&consumer_cv, NULL);
+	//pthread_cond_init(&consumer_cv, NULL);
 
 	//#warning The student should take care to handle the exit case and join the threads
 	int err = pthread_join(producer_tid, NULL);

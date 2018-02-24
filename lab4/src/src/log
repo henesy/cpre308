@@ -1,8 +1,8 @@
 Consumer thread has spawned!
 Consumer waiting for event signal!
-Started producer!
 Consumer thread has spawned!
 Consumer waiting for event signal!
+Started producer!
 Producer read NEW!
 Producer read NAME!
 Producer read FILE!
@@ -34,7 +34,8 @@ Producer unlocked mutex!
 Broadcast for consumption!
 Consumer got signalled!
 Consumer popping from queue!
-Consumer almost ate a NULL head! Skipping…
+Consumer printed job to driver!
+Consumed: output2.pdf
 Consumer unlocked semaphore!
 Consumer unlocked mutex!
 Consumer waiting for event signal!
