@@ -1,28 +1,10 @@
 Consumer thread has spawned!
 Consumer locking mutex!
-Started producer!
 Consumer waiting for event signal!
 Consumer thread has spawned!
 Consumer locking mutex!
 Consumer waiting for event signal!
-Producer read NEW!
-Producer read NAME!
-Producer read FILE!
-Producer read DESCRIPTION!
-Producer read PRINTER!
-Producer read PRINT!
-Producer group found, locking mutex!
-Producer locked mutex!
-Producer unlocked semaphore!
-Producer unlocked mutex!
-Broadcast for consumption!
-Consumer got signalled!
-Consumer popping from queue!
-Consumer almost ate a NULL head! Skipping…
-Consumer unlocked semaphore!
-Consumer unlocked mutex!
-Consumer locking mutex!
-Consumer waiting for event signal!
+Started producer!
 Producer read NEW!
 Producer read NAME!
 Producer read FILE!
@@ -37,9 +19,16 @@ Broadcast for consumption!
 Consumer got signalled!
 Consumer popping from queue!
 Consumer printed job to driver!
-Consumed: output2.pdf
+Consumed: output1.pdf
 Consumer unlocked semaphore!
 Consumer unlocked mutex!
 Consumer locking mutex!
 Consumer waiting for event signal!
-Found EXIT directive! Producer going down!
+Producer read NEW!
+Producer read NAME!
+Producer read FILE!
+Producer read DESCRIPTION!
+Producer read PRINTER!
+Producer read PRINT!
+Producer group found, locking mutex!
+Producer locked mutex!

@@ -41,6 +41,7 @@ FILE* logfile = NULL;
 int logtf = false;
 pthread_cond_t consumer_cv;
 int supply = 0;
+int first = true;
 
 // -- STATIC VARIABLES -- //
 static struct printer_group * printer_group_head;
@@ -122,8 +123,8 @@ void *printer_thread(void* param)
 		pthread_cond_wait(&consumer_cv, &this->job_queue->lock);
 
 		fprintf(logfile, "Consumer got signalled!\n");
-		
-		/*err = sem_wait(&this->job_queue->num_jobs);
+		/*
+		err = sem_wait(&this->job_queue->num_jobs);
 		if(err != 0){
 			eprintf("Semaphore setting failed.\n");
 			exit(err);
@@ -238,12 +239,17 @@ void * producer_thread(void * param)
 
 					pthread_mutex_lock(&g->job_queue.lock);
 					fprintf(logfile, "Producer locked mutex!\n");
-					/*err = sem_wait(&g->job_queue.num_jobs);
-					if(err != 0){
-						eprintf("Failed to set semaphore.\n");
-						exit(err);
+					
+					if(!first){
+						err = sem_wait(&g->job_queue.num_jobs);
+						if(err != 0){
+							eprintf("Failed to set semaphore.\n");
+							exit(err);
+						}
+						fprintf(logfile, "Producer locked semaphore!\n");
+					}else{
+						first = false;
 					}
-					fprintf(logfile, "Producer locked semaphore!\n");*/
 
 					struct print_job* j = g->job_queue.head;
 					if(j == NULL){
