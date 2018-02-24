@@ -103,7 +103,7 @@ void *printer_thread(void* param)
 	struct print_job * prev;
 	
 	fprintf(logfile, "Consumer thread has spawned!\n");
-	while(1)
+	while(1 && exit_flag == 0)
 	{
 		//#warning The student should implement the consumer thread
 		// In this loop the thread should wait for the producer to add something to the 
@@ -116,9 +116,10 @@ void *printer_thread(void* param)
 		
 		// We should wait to be signalled
 		fprintf(logfile, "Consumer waiting for event signal!\n");
-		while(supply == 0){
+		/*while(supply == 0){
 			pthread_cond_wait(&consumer_cv, &this->job_queue->lock);
-		}
+		}*/
+		pthread_cond_wait(&consumer_cv, &this->job_queue->lock);
 
 		fprintf(logfile, "Consumer got signalled!\n");
 		
@@ -150,11 +151,11 @@ void *printer_thread(void* param)
 		}
 		
 		
-		/*err = sem_post(&this->job_queue->num_jobs);
+		err = sem_post(&this->job_queue->num_jobs);
 		if(err != 0){
 			eprintf("Semaphore setting failed.\n");
 			exit(err);
-		}*/
+		}
 		fprintf(logfile, "Consumer unlocked semaphore!\n");
 		pthread_mutex_unlock(&this->job_queue->lock);
 		fprintf(logfile, "Consumer unlocked mutex!\n");
@@ -230,9 +231,9 @@ void * producer_thread(void * param)
 					// At this point the job has been created and should be pushed into the job_queue
 					// for group `g`.  This should also signal the consumer that the job is ready to
 					// be consumed.
-					while(supply > 0){sleep(0.1);}
+					//while(supply > 0){sleep(0.1);}
 					
-					//int err;
+					int err;
 					fprintf(logfile, "Producer group found, locking mutex!\n");
 
 					pthread_mutex_lock(&g->job_queue.lock);
@@ -257,12 +258,12 @@ void * producer_thread(void * param)
 						job->next_job = NULL;
 					}
 					
-					/*err = sem_post(&g->job_queue.num_jobs);
+					err = sem_post(&g->job_queue.num_jobs);
 					if(err != 0){
 						eprintf("Failed to post semaphore.\n");
 						exit(err);
 					}
-					fprintf(logfile, "Producer unlocked semaphore!\n");*/
+					fprintf(logfile, "Producer unlocked semaphore!\n");
 					pthread_mutex_unlock(&g->job_queue.lock);
 					fprintf(logfile, "Producer unlocked mutex!\n");
 					supply += 1;
