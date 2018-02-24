@@ -1,0 +1,6 @@
+You can run the test script using:
+
+	./test3.sh | ./main
+
+This will output four files into printer/ using the color and the black_and_white printer groups.
+

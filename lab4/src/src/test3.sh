@@ -5,8 +5,8 @@
 
 echo "NEW"
 echo "NAME output1.pdf"
-echo "FILE samplec.ps"
-echo "DESCRIPTION The first test file"
+echo "FILE acidpaper.ps"
+echo "DESCRIPTION From a language"
 echo "PRINTER black_white"
 echo "PRINT"
 sleep 5
@@ -19,15 +19,15 @@ echo "PRINT"
 sleep 5
 echo "NEW"
 echo "NAME output3.pdf"
-echo "FILE samplec.ps"
-echo "DESCRIPTION bonk"
+echo "FILE mkfiles.ps"
+echo "DESCRIPTION Mkfiles"
 echo "PRINTER black_white"
 echo "PRINT"
 sleep 5
 echo "NEW"
 echo "NAME output4.pdf"
-echo "FILE samplec.ps"
-echo "DESCRIPTION honk"
+echo "FILE pathstar.ps"
+echo "DESCRIPTION Inferno OS"
 echo "PRINTER color"
 echo "PRINT"
 sleep 5
