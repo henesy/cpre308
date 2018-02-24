@@ -39,6 +39,8 @@ int exit_flag = 0;
 char* logname = NULL;
 FILE* logfile = NULL;
 int logtf = false;
+pthread_cond_t consumer_cv;
+int supply = 0;
 
 // -- STATIC VARIABLES -- //
 static struct printer_group * printer_group_head;
@@ -100,37 +102,67 @@ void *printer_thread(void* param)
 	struct print_job * job;
 	struct print_job * prev;
 	
-	printf("I am a thread\n");
+	fprintf(logfile, "Consumer thread has spawned!\n");
 	//return NULL;
-	while(1)
+	while(1 && exit_flag != 1)
 	{
 		//#warning The student should implement the consumer thread
 		// In this loop the thread should wait for the producer to add something to the 
 		// this->job_queue list.  It should then in a thread safe way pull that job
-		// out of the queue
+		// out of the queue		
+		int err;
+		
+		// Check if exiting
+		if(exit_flag == 1)
+			return NULL;
 		
 		// We should wait to be signalled
-		pthread_mutex_lock(&this->job_queue->lock);
-		int err = sem_wait(&this->job_queue->num_jobs);
+		fprintf(logfile, "Consumer waiting for event signal!\n");
+		while(supply == 0 && exit_flag != 1)
+			pthread_cond_wait(&consumer_cv, &this->job_queue->lock);
+
+		fprintf(logfile, "Consumer got signalled (mutex locked?)!\n");
+		
+		//pthread_mutex_lock(&this->job_queue->lock);
+		
+		err = sem_wait(&this->job_queue->num_jobs);
 		if(err != 0){
 			eprintf("Semaphore setting failed.\n");
 			exit(err);
 		}
+		fprintf(logfile, "Consumer locked semaphore!\n");
 		
+		fprintf(logfile, "Consumer popping from queue!\n");
 		// Pop from queue. See: http://www.cs.armstrong.edu/liang/animation/web/Queue.html
-		job = this->job_queue->head;
-		prev = job->next_job;
-		this->job_queue->head = prev;
-		fprintf(logfile, "Consumed: %s\n", job->job_name);
-		// TODO -- Do more?
+		if(this->job_queue->head != NULL){
+			job = this->job_queue->head;
+			prev = job->next_job;
+			this->job_queue->head = prev;
+			
+			// TODO -- Do more?
+			err = printer_print(&this->driver, job);
+			if(err != 0)
+				fprintf(logfile, "Consumer error in printing job to driver!\n");
+			else
+				fprintf(logfile, "Consumer printed job to driver!\n");
+			
+			fprintf(logfile, "Consumed: %s\n", job->job_name);
+			supply --;
+		}else{
+			fprintf(logfile, "Consumer almost ate a NULL head! Skipping…\n");
+		}
+		
 		
 		err = sem_post(&this->job_queue->num_jobs);
 		if(err != 0){
 			eprintf("Semaphore setting failed.\n");
 			exit(err);
 		}
+		fprintf(logfile, "Consumer unlocked semaphore!\n");
 		pthread_mutex_unlock(&this->job_queue->lock);
+		fprintf(logfile, "Consumer unlocked mutex!\n");
 	}
+	fprintf(logfile, "EXIT directive found! Consumer going down!\n");
 	return NULL;
 }
 
@@ -142,6 +174,7 @@ void * producer_thread(void * param)
 	char * line = NULL;
 	size_t n = 0;
 	long long job_number = 0;
+	fprintf(logfile, "Started producer!\n");
 	
 	while(getline(&line, &n, stdin) > 0)
 	{
@@ -188,20 +221,29 @@ void * producer_thread(void * param)
 			}
 			for(g = printer_group_head; g; g=g->next_group)
 			{
+				fprintf(logfile, "Producer entered primary push loop!\n");
 				if(strcmp(job->group_name, g->name) == 0)
 				{
+					// Check if exiting
+					if(exit_flag == 1)
+						return NULL;
 
 					//#warning The student should push the job into the queue
 					// At this point the job has been created and should be pushed into the job_queue
 					// for group `g`.  This should also signal the consumer that the job is ready to
 					// be consumed.
+					int err;
+					fprintf(logfile, "Producer found, locking mutex!\n");
 
 					pthread_mutex_lock(&g->job_queue.lock);
-					int err = sem_wait(&g->job_queue.num_jobs);
+					fprintf(logfile, "Producer locked mutex!\n");
+					/*err = sem_wait(&g->job_queue.num_jobs);
 					if(err != 0){
 						eprintf("Failed to set semaphore.\n");
 						exit(err);
 					}
+					fprintf(logfile, "Producer locked semaphore!\n");*/
+
 					struct print_job* j = g->job_queue.head;
 					if(j == NULL){
 						// Empty queue
@@ -220,7 +262,12 @@ void * producer_thread(void * param)
 						eprintf("Failed to post semaphore.\n");
 						exit(err);
 					}
+					fprintf(logfile, "Producer unlocked semaphore!\n");
 					pthread_mutex_unlock(&g->job_queue.lock);
+					fprintf(logfile, "Producer unlocked mutex!\n");
+					supply += 1;
+					pthread_cond_broadcast(&consumer_cv);
+					fprintf(logfile, "Broadcast for consumption!\n");
 				}
 			}
 			if(job)
@@ -232,6 +279,8 @@ void * producer_thread(void * param)
 		else if(strncmp(line, "EXIT", 4) == 0)
 		{
 			exit_flag = 1;
+			fprintf(logfile, "Found EXIT directive! Producer going down!\n");
+			//pthread_cond_broadcast(&consumer_cv);
 			return NULL;
 		}
 	}
@@ -247,7 +296,7 @@ int main(int argc, char* argv[])
 	// parse the command line arguments
 	parse_command_line(argc, argv);
 	if(logname != NULL){
-		logfile = fopen(logname, "w");
+		logfile = fopen(logname, "w+");
 		if(logfile != NULL){
 			logtf = true;
 		}else{
@@ -285,7 +334,9 @@ int main(int argc, char* argv[])
 	//-- Create the prducer thread
 	pthread_t producer_tid;
 	pthread_create(&producer_tid, NULL, producer_thread, NULL);
-
+	
+	//-- Initialize events
+	pthread_cond_init(&consumer_cv, NULL);
 
 	//#warning The student should take care to handle the exit case and join the threads
 	int err = pthread_join(producer_tid, NULL);
@@ -302,10 +353,15 @@ int main(int argc, char* argv[])
 		for(p = g->printer_queue; p; p = p->next)
 		{
 			// spawn the printer thread
-			pthread_join(p->tid, NULL);
+			err = pthread_join(p->tid, NULL);
+			if(err != 0){
+				eprintf("Error. Failed to join consumer.\n");
+				exit(err);
+			}
 		}
 	}
 	
+	fflush(logfile);
 	fclose(logfile);
 
 	return 0;
