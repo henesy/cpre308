@@ -30,8 +30,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #include "printer_driver.h"
 #include "debug.h"
 
-#define true 0
-#define false 1
+#define true 1
+#define false 0
 
 // -- GLOBAL VARIABLES -- //
 int verbose_flag = 0;
@@ -103,8 +103,7 @@ void *printer_thread(void* param)
 	struct print_job * prev;
 	
 	fprintf(logfile, "Consumer thread has spawned!\n");
-	//return NULL;
-	while(1 && exit_flag != 1)
+	while(1)
 	{
 		//#warning The student should implement the consumer thread
 		// In this loop the thread should wait for the producer to add something to the 
@@ -112,25 +111,23 @@ void *printer_thread(void* param)
 		// out of the queue		
 		int err;
 		
-		// Check if exiting
-		if(exit_flag == 1)
-			return NULL;
+		pthread_mutex_lock(&this->job_queue->lock);
+		fprintf(logfile, "Consumer locking mutex!\n");
 		
 		// We should wait to be signalled
 		fprintf(logfile, "Consumer waiting for event signal!\n");
-		while(supply == 0 && exit_flag != 1)
+		while(supply == 0){
 			pthread_cond_wait(&consumer_cv, &this->job_queue->lock);
+		}
 
-		fprintf(logfile, "Consumer got signalled (mutex locked?)!\n");
+		fprintf(logfile, "Consumer got signalled!\n");
 		
-		//pthread_mutex_lock(&this->job_queue->lock);
-		
-		err = sem_wait(&this->job_queue->num_jobs);
+		/*err = sem_wait(&this->job_queue->num_jobs);
 		if(err != 0){
 			eprintf("Semaphore setting failed.\n");
 			exit(err);
 		}
-		fprintf(logfile, "Consumer locked semaphore!\n");
+		fprintf(logfile, "Consumer locked semaphore!\n");*/
 		
 		fprintf(logfile, "Consumer popping from queue!\n");
 		// Pop from queue. See: http://www.cs.armstrong.edu/liang/animation/web/Queue.html
@@ -153,11 +150,11 @@ void *printer_thread(void* param)
 		}
 		
 		
-		err = sem_post(&this->job_queue->num_jobs);
+		/*err = sem_post(&this->job_queue->num_jobs);
 		if(err != 0){
 			eprintf("Semaphore setting failed.\n");
 			exit(err);
-		}
+		}*/
 		fprintf(logfile, "Consumer unlocked semaphore!\n");
 		pthread_mutex_unlock(&this->job_queue->lock);
 		fprintf(logfile, "Consumer unlocked mutex!\n");
@@ -180,35 +177,41 @@ void * producer_thread(void * param)
 	{
 		if(strncmp(line, "NEW", 3) == 0)
 		{
+			fprintf(logfile, "Producer read NEW!\n");
 			job = calloc(1, sizeof(struct print_job));
 			job->job_number = job_number++;
 		}
 		else if(job && strncmp(line, "FILE", 4) == 0)
 		{
+			fprintf(logfile, "Producer read FILE!\n");
 			strtok(line, ": ");
 			job->file_name = malloc(n);
 			strncpy(job->file_name, strtok(NULL, "\n"), n);
 		}
 		else if(job && strncmp(line, "NAME", 4) == 0)
 		{
+			fprintf(logfile, "Producer read NAME!\n");
 			strtok(line, ": ");
 			job->job_name = malloc(n);
 			strncpy(job->job_name, strtok(NULL, "\n"), n);
 		}
 		else if(job && strncmp(line, "DESCRIPTION", 11) == 0)
 		{
+			fprintf(logfile, "Producer read DESCRIPTION!\n");
 			strtok(line, ": ");
 			job->description = malloc(n);
 			strncpy(job->description, strtok(NULL, "\n"), n);
 		}
 		else if(job && strncmp(line, "PRINTER", 7) == 0)
 		{
+			fprintf(logfile, "Producer read PRINTER!\n");
 			strtok(line, ": ");
 			job->group_name = malloc(n);	
 			strncpy(job->group_name, strtok(NULL, "\n"), n);
 		}
 		else if(job && strncmp(line, "PRINT", 5) == 0)
 		{
+			fprintf(logfile, "Producer read PRINT!\n");
 			if(!job->group_name)
 			{
 				eprintf("Trying to print without setting printer\n");
@@ -221,19 +224,16 @@ void * producer_thread(void * param)
 			}
 			for(g = printer_group_head; g; g=g->next_group)
 			{
-				fprintf(logfile, "Producer entered primary push loop!\n");
 				if(strcmp(job->group_name, g->name) == 0)
 				{
-					// Check if exiting
-					if(exit_flag == 1)
-						return NULL;
-
 					//#warning The student should push the job into the queue
 					// At this point the job has been created and should be pushed into the job_queue
 					// for group `g`.  This should also signal the consumer that the job is ready to
 					// be consumed.
-					int err;
-					fprintf(logfile, "Producer found, locking mutex!\n");
+					while(supply > 0){sleep(0.1);}
+					
+					//int err;
+					fprintf(logfile, "Producer group found, locking mutex!\n");
 
 					pthread_mutex_lock(&g->job_queue.lock);
 					fprintf(logfile, "Producer locked mutex!\n");
@@ -257,12 +257,12 @@ void * producer_thread(void * param)
 						job->next_job = NULL;
 					}
 					
-					err = sem_post(&g->job_queue.num_jobs);
+					/*err = sem_post(&g->job_queue.num_jobs);
 					if(err != 0){
 						eprintf("Failed to post semaphore.\n");
 						exit(err);
 					}
-					fprintf(logfile, "Producer unlocked semaphore!\n");
+					fprintf(logfile, "Producer unlocked semaphore!\n");*/
 					pthread_mutex_unlock(&g->job_queue.lock);
 					fprintf(logfile, "Producer unlocked mutex!\n");
 					supply += 1;
@@ -299,6 +299,7 @@ int main(int argc, char* argv[])
 		logfile = fopen(logname, "w+");
 		if(logfile != NULL){
 			logtf = true;
+			setbuf(logfile, NULL);
 		}else{
 			eprintf("Error. Failed to open logfile.\n");
 			logfile = stdout;
@@ -354,6 +355,7 @@ int main(int argc, char* argv[])
 		{
 			// spawn the printer thread
 			err = pthread_join(p->tid, NULL);
+			err = 0;
 			if(err != 0){
 				eprintf("Error. Failed to join consumer.\n");
 				exit(err);
