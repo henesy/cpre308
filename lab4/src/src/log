@@ -1,8 +1,6 @@
 Consumer thread has spawned!
-Consumer waiting for event signal!
-Consumer thread has spawned!
-Consumer waiting for event signal!
 Started producer!
+Consumer thread has spawned!
 Producer read NEW!
 Producer read NAME!
 Producer read FILE!
@@ -16,109 +14,11 @@ Producer unlocked mutex!
 Broadcast for consumption!
 Consumer got signalled!
 Consumer popping from queue!
+Producer looped over extra printer group name given: black_white
 Consumer printed job to driver!
 Consumed: output1.pdf
 Consumer unlocked semaphore!
 Consumer unlocked mutex!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
 Producer read NEW!
 Producer read NAME!
 Producer read FILE!
@@ -130,112 +30,13 @@ Producer locked mutex!
 Producer unlocked semaphore!
 Producer unlocked mutex!
 Broadcast for consumption!
+Producer looped over extra printer group name given: color
 Consumer got signalled!
 Consumer popping from queue!
 Consumer printed job to driver!
 Consumed: output2.pdf
 Consumer unlocked semaphore!
 Consumer unlocked mutex!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
-Consumer waiting for event signal!
 Found EXIT directive! Producer going down!
 EXIT directive found! Consumer going down!
 EXIT directive found! Consumer going down!

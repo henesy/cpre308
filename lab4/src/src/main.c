@@ -41,7 +41,7 @@ int verbose_flag = 0;
 int exit_flag = 0;
 char* logname = NULL;
 FILE* logfile = NULL;
-int logtf = false;
+//int logtf = false;
 //pthread_cond_t consumer_cv;
 int supply = 0;
 int first = true;
@@ -121,7 +121,8 @@ void *printer_thread(void* param)
 		fprintf(logfile, "Consumer locking mutex!\n");*/
 		
 		// We should wait to be signalled
-		fprintf(logfile, "Consumer waiting for event signal!\n");
+		if(verbose_flag)
+			fprintf(logfile, "Consumer waiting for event signal!\n");
 		/*while(supply == 0){
 			pthread_cond_wait(&this->job_queue->cv, &this->job_queue->lock);
 		}*/
@@ -165,8 +166,10 @@ void *printer_thread(void* param)
 			err = printer_print(&this->driver, job);
 			if(err != 0)
 				fprintf(logfile, "Consumer error in printing job to driver!\n");
-			else
+			else{
 				fprintf(logfile, "Consumer printed job to driver!\n");
+				eprintf("ANNOUNCE: Print job completed: %s\n", job->job_name);
+			}
 			
 			fprintf(logfile, "Consumed: %s\n", job->job_name);
 			supply --;
@@ -304,7 +307,7 @@ void * producer_thread(void * param)
 			}
 			if(job)
 			{
-				eprintf("Invalid printer group name given: %s\n", job->group_name);
+				fprintf(logfile, "Producer looped over extra printer group name given: %s\n", job->group_name);
 				continue;
 			}
 		}
@@ -312,6 +315,7 @@ void * producer_thread(void * param)
 		{
 			exit_flag = 1;
 			fprintf(logfile, "Found EXIT directive! Producer going down!\n");
+			eprintf("ANNOUNCE: EXIT command received, going down…\n");
 			//pthread_cond_broadcast(&g->job_queue.cv);
 			
 			
@@ -333,7 +337,7 @@ int main(int argc, char* argv[])
 	if(logname != NULL){
 		logfile = fopen(logname, "w+");
 		if(logfile != NULL){
-			logtf = true;
+			//logtf = true;
 			setbuf(logfile, NULL);
 		}else{
 			eprintf("Error. Failed to open logfile.\n");
