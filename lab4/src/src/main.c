@@ -241,6 +241,7 @@ void * producer_thread(void * param)
 					pthread_mutex_lock(&g->job_queue.lock);
 					fprintf(logfile, "Producer locked mutex!\n");
 					
+					/*
 					if(!first){
 						err = sem_wait(&g->job_queue.num_jobs);
 						if(err != 0){
@@ -250,7 +251,7 @@ void * producer_thread(void * param)
 						fprintf(logfile, "Producer locked semaphore!\n");
 					}else{
 						first = false;
-					}
+					}*/
 
 					struct print_job* j = g->job_queue.head;
 					if(j == NULL){
