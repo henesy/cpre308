@@ -25,6 +25,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #include <string.h>
 #include <semaphore.h>
 
+#include <sys/time.h>
+#include <errno.h>
+
 
 #include "print_job.h"
 #include "printer_driver.h"
@@ -122,7 +125,24 @@ void *printer_thread(void* param)
 		/*while(supply == 0){
 			pthread_cond_wait(&this->job_queue->cv, &this->job_queue->lock);
 		}*/
-		pthread_cond_wait(&this->job_queue->cv, &this->job_queue->lock);
+		
+		// Do a time delay to cycle
+		int timeinms = 100;
+		struct timeval tv;
+    		struct timespec ts;
+		
+		gettimeofday(&tv, NULL);
+		ts.tv_sec = time(NULL) + timeinms / 1000;
+		ts.tv_nsec = tv.tv_usec * 1000 + 1000 * 1000 * (timeinms % 1000);
+		ts.tv_sec += ts.tv_nsec / (1000 * 1000 * 1000);
+		ts.tv_nsec %= (1000 * 1000 * 1000);
+		
+		
+		//pthread_cond_wait(&this->job_queue->cv, &this->job_queue->lock);
+		int n = pthread_cond_timedwait(&this->job_queue->cv, &this->job_queue->lock, &ts);
+		
+		if (n == ETIMEDOUT)
+			continue;
 
 		fprintf(logfile, "Consumer got signalled!\n");
 		
