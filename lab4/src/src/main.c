@@ -43,6 +43,7 @@ char* logname = NULL;
 FILE* logfile = NULL;
 //int logtf = false;
 //pthread_cond_t consumer_cv;
+pthread_mutex_t supply_mutex;
 int supply = 0;
 int first = true;
 
@@ -172,7 +173,9 @@ void *printer_thread(void* param)
 			}
 			
 			fprintf(logfile, "Consumed: %s\n", job->job_name);
+			pthread_mutex_lock(&supply_mutex);
 			supply --;
+			pthread_mutex_unlock(&supply_mutex);
 		}else{
 			fprintf(logfile, "Consumer almost ate a NULL head! Skipping…\n");
 		}
@@ -299,7 +302,10 @@ void * producer_thread(void * param)
 					fprintf(logfile, "Producer unlocked semaphore!\n");
 					pthread_mutex_unlock(&g->job_queue.lock);
 					fprintf(logfile, "Producer unlocked mutex!\n");
+					pthread_mutex_lock(&supply_mutex);
 					supply += 1;
+					pthread_mutex_unlock(&supply_mutex);
+					
 					//pthread_cond_broadcast(&g->job_queue.cv);
 					pthread_cond_signal(&g->job_queue.cv);
 					fprintf(logfile, "Broadcast for consumption!\n");
@@ -315,6 +321,13 @@ void * producer_thread(void * param)
 		{
 			exit_flag = 1;
 			fprintf(logfile, "Found EXIT directive! Producer going down!\n");
+			fprintf(logfile, "Waiting on all consumers to exit…\n");
+			while(1){
+				pthread_mutex_lock(&supply_mutex);
+				if(supply < 1)
+					break;
+				pthread_mutex_unlock(&supply_mutex);
+			}
 			eprintf("ANNOUNCE: EXIT command received, going down…\n");
 			//pthread_cond_broadcast(&g->job_queue.cv);
 			
@@ -354,6 +367,8 @@ int main(int argc, char* argv[])
 	// close the config file
 	fclose(config);
 
+	//-- Initialize supply mutex
+	pthread_mutex_init(&supply_mutex, NULL);
 
 	//-- Create the consumer threads
 	// for each printer group
@@ -413,6 +428,8 @@ int main(int argc, char* argv[])
 		pthread_mutex_destroy(&g->job_queue.lock);
 		sem_destroy(&g->job_queue.num_jobs);
 	}
+	
+	pthread_mutex_destroy(&supply_mutex);
 	
 	
 	fflush(logfile);

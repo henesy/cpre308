@@ -1,8 +1,8 @@
 Consumer thread has spawned!
+Consumer thread has spawned!
 Started producer!
 Producer read NEW!
 Producer read NAME!
-Consumer thread has spawned!
 Producer read FILE!
 Producer read DESCRIPTION!
 Producer read PRINTER!
@@ -12,9 +12,9 @@ Producer locked mutex!
 Producer unlocked semaphore!
 Producer unlocked mutex!
 Broadcast for consumption!
+Producer looped over extra printer group name given: black_white
 Consumer got signalled!
 Consumer popping from queue!
-Producer looped over extra printer group name given: black_white
 Consumer printed job to driver!
 Consumed: output1.pdf
 Consumer unlocked semaphore!
@@ -74,5 +74,6 @@ Consumed: output4.pdf
 Consumer unlocked semaphore!
 Consumer unlocked mutex!
 Found EXIT directive! Producer going down!
+Waiting on all consumers to exit…
 EXIT directive found! Consumer going down!
 EXIT directive found! Consumer going down!
