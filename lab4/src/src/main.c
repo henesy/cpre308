@@ -277,7 +277,8 @@ void * producer_thread(void * param)
 					pthread_mutex_unlock(&g->job_queue.lock);
 					fprintf(logfile, "Producer unlocked mutex!\n");
 					supply += 1;
-					pthread_cond_broadcast(&g->job_queue.cv);
+					//pthread_cond_broadcast(&g->job_queue.cv);
+					pthread_cond_signal(&g->job_queue.cv);
 					fprintf(logfile, "Broadcast for consumption!\n");
 				}
 			}
@@ -292,6 +293,9 @@ void * producer_thread(void * param)
 			exit_flag = 1;
 			fprintf(logfile, "Found EXIT directive! Producer going down!\n");
 			//pthread_cond_broadcast(&g->job_queue.cv);
+			
+			
+			
 			return NULL;
 		}
 	}
@@ -374,6 +378,18 @@ int main(int argc, char* argv[])
 			}
 		}
 	}
+	
+	
+	// Tear down
+	// for each printer group
+	for(g = printer_group_head; g; g = g->next_group)
+	{
+		// crush kill destroy
+		pthread_cond_destroy(&g->job_queue.cv);
+		pthread_mutex_destroy(&g->job_queue.lock);
+		sem_destroy(&g->job_queue.num_jobs);
+	}
+	
 	
 	fflush(logfile);
 	fclose(logfile);

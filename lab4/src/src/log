@@ -1,8 +1,8 @@
 Consumer thread has spawned!
+Started producer!
 Consumer waiting for event signal!
 Consumer thread has spawned!
 Consumer waiting for event signal!
-Started producer!
 Producer read NEW!
 Producer read NAME!
 Producer read FILE!
