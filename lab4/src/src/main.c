@@ -112,8 +112,8 @@ void *printer_thread(void* param)
 		// out of the queue		
 		int err;
 		
-		pthread_mutex_lock(&this->job_queue->lock);
-		fprintf(logfile, "Consumer locking mutex!\n");
+		/*pthread_mutex_lock(&this->job_queue->lock);
+		fprintf(logfile, "Consumer locking mutex!\n");*/
 		
 		// We should wait to be signalled
 		fprintf(logfile, "Consumer waiting for event signal!\n");
@@ -123,6 +123,7 @@ void *printer_thread(void* param)
 		pthread_cond_wait(&consumer_cv, &this->job_queue->lock);
 
 		fprintf(logfile, "Consumer got signalled!\n");
+		
 		/*
 		err = sem_wait(&this->job_queue->num_jobs);
 		if(err != 0){

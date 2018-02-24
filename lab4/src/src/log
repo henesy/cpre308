@@ -1,8 +1,6 @@
 Consumer thread has spawned!
-Consumer locking mutex!
 Consumer waiting for event signal!
 Consumer thread has spawned!
-Consumer locking mutex!
 Consumer waiting for event signal!
 Started producer!
 Producer read NEW!
@@ -22,7 +20,6 @@ Consumer printed job to driver!
 Consumed: output1.pdf
 Consumer unlocked semaphore!
 Consumer unlocked mutex!
-Consumer locking mutex!
 Consumer waiting for event signal!
 Producer read NEW!
 Producer read NAME!
