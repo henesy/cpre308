@@ -1,0 +1,16 @@
+# The Kernel
+
+Architectures:
+* x86
+* m68k
+* arm
+* mips
+* openrisc
+
+Filesystems:
+* JFS
+* ext4
+* XFS
+
+# Compile
+
