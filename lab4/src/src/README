@@ -4,3 +4,13 @@ You can run the test script using:
 
 This will output four files into printer/ using the color and the black_and_white printer groups. The files printed are taken as .ps postscript files presented in the src archive root directory.
 
+As the main binary logs a lot of information by default, it is recommended to test the program using a log file:
+
+	./test3.sh | ./main -l log
+
+To log the maximum amount of output, use the verbose flag:
+
+	./test3.sh | ./main -v -l log
+
+Announcements will be printed to stderr regardless of logging status, in red.
+
