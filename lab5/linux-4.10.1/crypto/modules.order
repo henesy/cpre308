@@ -1,0 +1,5 @@
+kernel/crypto/echainiv.ko
+kernel/crypto/hmac.ko
+kernel/crypto/sha256_generic.ko
+kernel/crypto/drbg.ko
+kernel/crypto/jitterentropy_rng.ko

@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['bash_5fattr_5fbright',['BASH_ATTR_BRIGHT',['../bash__color_8h.html#a6c6a36d92c616fce099e4fea9f5516c9',1,'bash_color.h']]],
+  ['bash_5fattr_5fdim',['BASH_ATTR_DIM',['../bash__color_8h.html#a2f405cdb502c8a6b53e118d2485a57a8',1,'bash_color.h']]],
+  ['bash_5fattr_5fhidden',['BASH_ATTR_HIDDEN',['../bash__color_8h.html#a17b464e233f17ceda3b402219778abc1',1,'bash_color.h']]],
+  ['bash_5fattr_5freverse',['BASH_ATTR_REVERSE',['../bash__color_8h.html#a224c18c8f878938b05710b725d2635aa',1,'bash_color.h']]],
+  ['bash_5fattr_5funderscore',['BASH_ATTR_UNDERSCORE',['../bash__color_8h.html#a71cb776187e86f18c0ab6dfb91d03bd8',1,'bash_color.h']]],
+  ['bash_5fback_5fblack',['BASH_BACK_BLACK',['../bash__color_8h.html#abcaa7299f1c6c80e21cfa8b62af076ea',1,'bash_color.h']]],
+  ['bash_5fback_5fblue',['BASH_BACK_BLUE',['../bash__color_8h.html#a058277c909d524b148a0a5248cd135f2',1,'bash_color.h']]],
+  ['bash_5fback_5fcyan',['BASH_BACK_CYAN',['../bash__color_8h.html#ad5056c614f2baa70d2b5e33996216d68',1,'bash_color.h']]],
+  ['bash_5fback_5fgreen',['BASH_BACK_GREEN',['../bash__color_8h.html#a142bb255e17e25f1ca4d3c4aa1dc7de4',1,'bash_color.h']]],
+  ['bash_5fback_5fmagenta',['BASH_BACK_MAGENTA',['../bash__color_8h.html#a81ab65586a25c1f4d49289a36681c843',1,'bash_color.h']]],
+  ['bash_5fback_5fred',['BASH_BACK_RED',['../bash__color_8h.html#ac3a4b2f0f94c630616aa103da2c742f1',1,'bash_color.h']]],
+  ['bash_5fback_5fwhite',['BASH_BACK_WHITE',['../bash__color_8h.html#a4a0532a7b6db436ed0c74ec21e332b97',1,'bash_color.h']]],
+  ['bash_5fback_5fyellow',['BASH_BACK_YELLOW',['../bash__color_8h.html#a6829cf0718c62af533c9ca98bec1188a',1,'bash_color.h']]],
+  ['bash_5ffore_5fblack',['BASH_FORE_BLACK',['../bash__color_8h.html#a1af5c6769128fe29bbe4a21cd168ece9',1,'bash_color.h']]],
+  ['bash_5ffore_5fblue',['BASH_FORE_BLUE',['../bash__color_8h.html#aab403678bbad33f7360dcfcca6be41c8',1,'bash_color.h']]],
+  ['bash_5ffore_5fcyan',['BASH_FORE_CYAN',['../bash__color_8h.html#a250df5e1c1fb0904a2271b9e2a2b2db5',1,'bash_color.h']]],
+  ['bash_5ffore_5fgreen',['BASH_FORE_GREEN',['../bash__color_8h.html#ad738b05bf29f64f436f3fb626ed5cb23',1,'bash_color.h']]],
+  ['bash_5ffore_5fmagenta',['BASH_FORE_MAGENTA',['../bash__color_8h.html#ae8c80b7c114286cc617472dd856b084b',1,'bash_color.h']]],
+  ['bash_5ffore_5fred',['BASH_FORE_RED',['../bash__color_8h.html#a1b36b199f4ee640e4ec9ddcbd6b02656',1,'bash_color.h']]],
+  ['bash_5ffore_5fwhite',['BASH_FORE_WHITE',['../bash__color_8h.html#ae9c9eaa04b94b854db524284be7b2832',1,'bash_color.h']]],
+  ['bash_5ffore_5fyellow',['BASH_FORE_YELLOW',['../bash__color_8h.html#a90700d96c0747f27517ff6f5dd210394',1,'bash_color.h']]],
+  ['bash_5freset',['BASH_RESET',['../bash__color_8h.html#a440f561241677507a31cd83255c49753',1,'bash_color.h']]]
+];

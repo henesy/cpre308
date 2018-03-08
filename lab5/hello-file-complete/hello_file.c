@@ -83,13 +83,15 @@ module_exit(device_exit);
 ///--- Device Open ---///
 static int device_open(struct inode *inode, struct file *file)
 {
-	static int counter = 0;
+	//static int counter = 0;
 	
 	if (Device_Open)
 		return -EBUSY;
 	
 	Device_Open++;
-	sprintf(msg, "I already told you %d times Hello World!\n", counter++);
+	
+	// I commented this out because it was corrupting the msg buffer and thus, my write prints.
+	//sprintf(msg, "I already told you %d times Hello World!\n", counter++);
 	msg_ptr = msg;
 	try_module_get(THIS_MODULE);
 	return SUCCESS;
@@ -130,40 +132,12 @@ static ssize_t device_read(struct file *file, char *buffer, size_t length, loff_
 ///--- Device Write ---///
 static ssize_t device_write(struct file *file, const char *buffer, size_t len, loff_t *offset)
 {
-	int i, k;
-	int end = MIN(len-1, BUF_LEN-1);
-	for(i = 0, k = end; i < len && i < BUF_LEN && k >= 0; i++, k--){
-		get_user(msg[k], buffer+i);
+	int i;
+	for(i = 0; i < len && i < BUF_LEN; i++){
+		get_user(msg[i], buffer+len-i-1);
 	}
-	end = MIN(BUF_LEN-1, i);
-	msg[end] = '\0';
 	
+	printk(KERN_INFO "%s\n", msg);
 	msg_ptr = msg;
-	printk(KERN_INFO "CPRE308: %s", msg);
 	return i;
-
-
-
-	//sprintf(msg, "%s(%zu letters)", buffer, len);
-	//printk(KERN_INFO "CPRE308: Device received %zu characters\n", len);
-	//return len;
-	
-	//printk(KERN_ALERT "Sorry, this operation isn't supported.\n");
-	//return -EINVAL;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

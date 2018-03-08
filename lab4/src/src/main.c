@@ -44,6 +44,7 @@ FILE* logfile = NULL;
 pthread_mutex_t supply_mutex;
 int supply = 0;
 int first = true;
+int timeinms = 100;
 
 // -- STATIC VARIABLES -- //
 static struct printer_group * printer_group_head;
@@ -117,7 +118,6 @@ void *printer_thread(void* param)
 			fprintf(logfile, "Consumer waiting for event signal!\n");
 		
 		// Do a time delay to cycle
-		int timeinms = 100;
 		struct timeval tv;
     		struct timespec ts;
 		
@@ -396,17 +396,22 @@ int main(int argc, char* argv[])
  * 
  * Recognized arguments:
  *   - `-v`: Turn on Verbose mode
+ *   - '-l':  Log to a given file provided as an argument to l
+ *   - '-t':  Set the Consumer thread timeout in ms. Larger values can reduce CPU load (default: 100).
  *   - `-?`: Print help information
  */
 static void parse_command_line(int argc, char * argv[])
 {
 	int c;
-	while((c = getopt(argc, argv, "l:v?")) != -1)
+	while((c = getopt(argc, argv, "l:t:v?")) != -1)
 	{
 		switch(c)
 		{
 			case 'l': 
 				logname = optarg;
+				break;
+			case 't':
+				timeinms = atoi(optarg);
 				break;
 			case 'v': // turn on verbose mode
 				verbose_flag = 1;

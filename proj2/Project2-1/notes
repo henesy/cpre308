@@ -1,0 +1,114 @@
+# Types of IPC
+
+## Pipe Test
+
+	% ./a.out
+	My child asked "Are you my mummy?"
+	And then returned 42
+
+Timing was a slight delay, then, both print statements display.
+
+## pipe(2) and pipe(7) Questions
+
+### What happens when more than one process tries to write to a pipe at the same time? Be specific: using the number of bytes that each might be trying to write and how that effects what happens. 
+
+
+	
+### How does the output of pipe_test.c change if you move the sleep statement from the child process before the fgets of the parent?
+
+
+
+### What is the maximum size of a pipe in Linux since kernel 2.6.11?
+
+
+
+## Named Pipe (FIFO)
+
+### What happens when you run the echo command?
+
+Text is written into the fifo and the write is blocked until something opens the fifo for reading. 
+
+### What happens if you run the echo first and the cat ?
+
+The cat reads and outputs the text being blocked on the echo write, releasing the echo writer. 
+
+### Look at the man page fifo(7). Where is the data that is sent through the FIFO stored?
+
+
+
+## Message Queues
+
+### test1 → test2:
+
+	% ./mq_test1
+	Received message "I am Clara"
+
+	% ./mq_test2
+	Received message "I am the Doctor"
+	Received message "I am the Master"
+
+### test2 → test1: 
+
+Same as above.
+
+### Change mq_test2.c to send a second message && change mq_test1.c to wait for and print the second message:
+
+
+
+## Unnamed Semaphores
+
+	sem_init(&shared_mem->my_sem, 1, 5);
+
+## Named Semaphores
+
+### How long do semaphores last in the kernel?
+
+
+
+### What causes them to be destroyed?
+
+
+
+### What is the basic process for creating and using named semaphores? (list the functions that would need to be called, and their order).
+
+
+
+## Signals
+
+### What happens when you try to use Ctrl+C to break out of the infinite loop?
+
+
+
+### What is the signal number that Ctrl+C sends?
+
+
+
+### When a process forks, does the child still use the same signal handler?
+
+
+
+### How about during an exec call?
+
+
+
+# Dynamically / Statically Linked
+
+## Without LD_LIBRARY_PATH
+
+	% ./lib_test
+	./lib_test: error while loading shared libraries: libhello.so: cannot open shared object file: No such file or directory
+
+## With LD_LIBRARY_PATH
+
+	sh-4.2$ export =`pwd`
+	sh-4.2$ $LD_LIBRARY_PATH
+	sh: /home/seh/cpre308/proj2/Project2-1/library: Is a directory
+	sh-4.2$ ./lib_test
+	Hello
+	World
+	World
+	World
+	i=42
+
+# Lab Tasks
+
