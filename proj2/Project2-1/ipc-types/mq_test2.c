@@ -117,5 +117,14 @@ int main(int argc, char** argv)
 		perror("mq_send\n");
 		return -1;
 	}
+	
+	char my_companion[] = "I am Rose";
+	
+	if( mq_send(msg_queue, my_companion, strlen(my_string), 12))
+	{
+		perror("mq_send\n");
+		return -1;
+	}
+
 	return 0;
 }
