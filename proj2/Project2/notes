@@ -1,0 +1,139 @@
+# Types of IPC
+
+## Pipe Test
+
+	% ./a.out
+	My child asked "Are you my mummy?"
+	And then returned 42
+
+Timing was a slight delay, then, both print statements display.
+
+## pipe(2) and pipe(7) Questions
+
+### What happens when more than one process tries to write to a pipe at the same time? Be specific: using the number of bytes that each might be trying to write and how that effects what happens. 
+
+POSIX.1 dictates that writes of less than PIPE_BUF bytes must be atomic. The output data is thusly written to the pipe as a continuous sequence. Writes greater in size than PIPE_BUF may not be atomic. In the case of nonatomic writes, the kernel may interleave the data written between processes. POSIX.1 dictates that PIPE_BUF is at least 512 bytes (on linux this is 4096 bytes). Blocking can be disabled or enabled if desired. 
+
+### How does the output of pipe_test.c change if you move the sleep statement from the child process before the fgets of the parent?
+
+The output with the sleep statement moved from the child to before the fgets of the parent:
+
+	% ./a.out
+	My child asked "Are you my mummy?"
+	And then returned 42
+
+The original (unmodified) output: 
+
+	% ./a.out
+	My child asked "Are you my mummy?"
+	And then returned 42
+
+Thusly, there is no change between the outputs (tested on linux-7 server).
+
+### What is the maximum size of a pipe in Linux since kernel 2.6.11?
+
+The size is located in /proc/sys/fs/pipe-max-size and is 1048576 (16 pages).
+
+## Named Pipe (FIFO)
+
+### What happens when you run the echo command?
+
+Text is written into the fifo and the write is blocked until something opens the fifo for reading. 
+
+### What happens if you run the echo first and the cat ?
+
+The cat reads and outputs the text being blocked on the echo write, releasing the echo writer. 
+
+### Look at the man page fifo(7). Where is the data that is sent through the FIFO stored?
+
+Data sent through the FIFO is stored in the kernel. Said data does not get written to the filesystem. 
+
+## Message Queues
+
+### test1 → test2:
+
+	% ./mq_test1
+	Received message "I am Clara"
+
+	% ./mq_test2
+	Received message "I am the Doctor"
+	Received message "I am the Master"
+
+### test2 → test1: 
+
+Same as above.
+
+### Change mq_test2.c to send a second message && change mq_test1.c to wait for and print the second message:
+
+	% ./mq_test1
+	Received message "I am Clara"
+	Received message "I am Rose"
+
+	% ./mq_test2
+	Received message "I am the Doctor"
+	Received message "I am the Master"
+
+## Unnamed Semaphores
+
+	sem_init(&shared_mem->my_sem, 1, 5);
+
+## Named Semaphores
+
+### How long do semaphores last in the kernel?
+
+POSIX semaphores are kernel persistent, meaning that even if no process has the semaphore open, the value is held. 
+
+### What causes them to be destroyed?
+
+sem_unlink() is the function by which to fully remove a semaphore (once the reference count is 0) from the kernel. Alternatively, the system could reboot. 
+
+### What is the basic process for creating and using named semaphores? (list the functions that would need to be called, and their order).
+
+sem_t *sem;
+unsigned int myvalue = 1;
+sem = sem_open("mysem", O_CREAT | O_EXCL, 0644, myvalue);
+sem_wait(sem);
+sem_post(sem);
+sem_unlink("mysem");
+
+## Signals
+
+### What happens when you try to use Ctrl+C to break out of the infinite loop?
+
+	% ./a.out
+	.....^?
+	Ah Ah Ah, you didn't say the magic word
+
+### What is the signal number that Ctrl+C sends?
+
+SIGINT
+
+### When a process forks, does the child still use the same signal handler?
+
+If fork() is called without a further exec (or similar), then then the child will use the same signal handler as the parent.
+
+### How about during an exec call?
+
+If exec is called after fork, the child will use a different signal handler than the original parent.
+
+# Dynamically / Statically Linked
+
+## Without LD_LIBRARY_PATH
+
+	% ./lib_test
+	./lib_test: error while loading shared libraries: libhello.so: cannot open shared object file: No such file or directory
+
+## With LD_LIBRARY_PATH
+
+	sh-4.2$ export =`pwd`
+	sh-4.2$ $LD_LIBRARY_PATH
+	sh: /home/seh/cpre308/proj2/Project2-1/library: Is a directory
+	sh-4.2$ ./lib_test
+	Hello
+	World
+	World
+	World
+	i=42
+
+# Lab Tasks
+
