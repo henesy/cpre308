@@ -19,6 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #ifndef PRINT_SERVER_CLIENT_H
 #define PRINT_SERVER_CLIENT_H
 
+#define nil ((void*)0)
 
 typedef struct PRINTER_DRIVER_STRUCT printer_driver_t;
 /// A printer driver returned by printer_list_drivers()

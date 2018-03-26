@@ -1,0 +1,10 @@
+libprintserver:
+
+* printer_print
+* printer_list_drivers
+* socket stuffs
+
+main: 
+
+* socket stuffs
+

@@ -31,9 +31,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #include "printer_driver.h"
 #include "debug.h"
 
+#define true 1
+#define false 0
+
 // -- GLOBAL VARIABLES -- //
 int verbose_flag = 0;
 int exit_flag = 0;
+int daemonize = false;
 
 // -- STATIC VARIABLES -- //
 static struct printer_group * printer_group_head;
@@ -108,8 +112,11 @@ int main(int argc, char* argv[])
 	parse_rc_file(config);
 	// close the config file
 	fclose(config);
+	
+	if(daemonize)
+		daemon(1,0);
 
-	// order of opperation:
+	// order of operation:
 	// 1. while the exit flag has not been set
 	// 2. read from standard in
 	// 3. do the necessary checks from standard in
@@ -237,7 +244,7 @@ int main(int argc, char* argv[])
 static void parse_command_line(int argc, char * argv[])
 {
 	int c;
-	while((c = getopt(argc, argv, "v?")) != -1)
+	while((c = getopt(argc, argv, "v?d")) != -1)
 	{
 		switch(c)
 		{
@@ -247,6 +254,9 @@ static void parse_command_line(int argc, char * argv[])
 			case '?': // print help information
 				fprintf(stdout, "Usage: %s [options]\n", argv[0]);
 				exit(0);
+				break;
+			case 'd': // DAEMONIZE
+				daemonize = true;
 				break;
 		}
 	}
