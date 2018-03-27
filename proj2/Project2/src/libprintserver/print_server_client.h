@@ -24,6 +24,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #define SRVPORT 13337
 #define SRVSIZE 1024
 #define MAXHANDLE 512
+#define MAXDRIVERS 10
+#define MAXNAME 512
 
 typedef struct PRINTER_DRIVER_STRUCT printer_driver_t;
 /// A printer driver returned by printer_list_drivers()

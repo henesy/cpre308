@@ -3,40 +3,54 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 /* sends print job to the print server daemon ;; return 0 on success */
 int
 printer_print(int* handle, char* driver, char* job_name, char* description, char* data)
 {
-	// hardcode socket stuff for now
+	/* socket routines */
 	int socket_desc;
 	struct sockaddr_in server;
 	server.sin_addr.s_addr = inet_addr(SRVADDR);
-    server.sin_family = AF_INET;
-    server.sin_port = htons( SRVPORT );
-    
+	server.sin_family = AF_INET;
+	server.sin_port = htons( SRVPORT );
+	    
 	// Create socket
-    socket_desc = socket(AF_INET , SOCK_STREAM , 0);
-    if(socket_desc == -1){
-        printf("ERROR: Could not create socket.\n");
-        return -1;
-    }
- 
-    // Connect to remote server
-    if(connect(socket_desc , (struct sockaddr *)&server , sizeof(server)) < 0){
-        printf("ERROR: Connecting to server socket.\n");
-        return -2;
-    }
-     
-    printf("LIB: Connected to server socket.\n");
+	socket_desc = socket(AF_INET , SOCK_STREAM , 0);
+	if(socket_desc == -1){
+		printf("ERROR: Could not create socket.\n");
+		return -1;
+	}
 	
+	// Connect to remote server
+	if(connect(socket_desc , (struct sockaddr *)&server , sizeof(server)) < 0){
+		printf("ERROR: Connecting to server socket.\n");
+		return -2;
+	}
+	     
+	printf("LIB: Connected to server socket.\n");
+	
+	// Write initial command to server
+
 	// buffer of 1024 bytes
 	char buffer[SRVSIZE];
 	int i, j;
 	for(i = 0; i < SRVSIZE; i++)
 		buffer[i] = '\0';
+
+	char* cmd = "MKJOB";
+	strcpy(buffer, cmd);
+	if(send(socket_desc, buffer, SRVSIZE , 0) < 0){
+		printf("ERROR: Send cmd to server failed.\n");
+		return -5;
+	}
+	printf("LIB: Cmd sent to server successfully.\n");
 	
 	/* add everything into the buffer for serialization */
+	for(i = 0; i < SRVSIZE; i++)
+		buffer[i] = '\0';
+	
 	// handle
 	
 	char handlestr[MAXHANDLE];
@@ -109,11 +123,11 @@ printer_print(int* handle, char* driver, char* job_name, char* description, char
 	printf("LIB: Begin writing to server…\n");
 	
 	if(send(socket_desc, buffer, SRVSIZE , 0) < 0){
-        printf("ERROR: Send to server failed.\n");
-        return -4;
-    }
-    printf("LIB: Buffer sent to server successfully.\n");
-	
+		printf("ERROR: Send to server failed.\n");
+		return -4;
+	}
+	printf("LIB: Buffer sent to server successfully.\n");
+
 	return 0;
 }
 
@@ -121,7 +135,66 @@ printer_print(int* handle, char* driver, char* job_name, char* description, char
 printer_driver_t**
 printer_list_drivers(int *number)
 {
+	/* socket routines */
+	int socket_desc;
+	struct sockaddr_in server;
+	server.sin_addr.s_addr = inet_addr(SRVADDR);
+	server.sin_family = AF_INET;
+	server.sin_port = htons( SRVPORT );
+	    
+	// Create socket
+	socket_desc = socket(AF_INET , SOCK_STREAM , 0);
+	if(socket_desc == -1){
+		printf("ERROR: Could not create socket.\n");
+		return nil;
+	}
+	
+	// Connect to remote server
+	if(connect(socket_desc , (struct sockaddr *)&server , sizeof(server)) < 0){
+		printf("ERROR: Connecting to server socket.\n");
+		return nil;
+	}
+	     
+	printf("LIB: Connected to server socket.\n");
+	
+	// Write initial command to server
 
+	// buffer of 1024 bytes
+	char buffer[SRVSIZE];
+	int i;
+	for(i = 0; i < SRVSIZE; i++)
+		buffer[i] = '\0';
+
+	char* cmd = "GETDRIVERS";
+	strcpy(buffer, cmd);
+	if(send(socket_desc, buffer, SRVSIZE , 0) < 0){
+		printf("ERROR: Send cmd to server failed.\n");
+		return nil;
+	}
+	printf("LIB: Cmd sent to server successfully.\n");
+	
+	/* get info from server */
+	for(i = 0; i < SRVSIZE; i++)
+		buffer[i] = '\0';
+
+	//Receive a reply from the server
+	printf("LIB: Waiting on server to write list…\n");
+	if(recv(socket_desc, buffer, SRVSIZE, 0) < 0){
+		printf("LIB: recv failed.\n");
+		return nil;
+	}
+	printf("LIB: Reply received.\n");
+	
+	// format is: pname~dname~version~pname2~dname2~version2…
+	// mode is: 0=pname, 1=dname, 2=version
+	int mode = 0;
+	int driven = 0;
+	printer_driver_t* drivers = calloc(MAXDRIVERS, sizeof(MAXDRIVERS));
+	char str[MAXNAME];
+	for(i = 0; i < SRVSIZE && driven < MAXDRIVERS; i++){
+		// populate array of drivers
+		
+	}
 
 	return nil;
 }

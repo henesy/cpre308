@@ -96,6 +96,40 @@ struct printer_group
 	struct print_job_list job_queue;
 };
 
+/* handles incoming tcp requests over socket ;; runs forever™ */
+int
+handler(struct sockaddr_in* serv_addr, int listenfd)
+{
+	char buffer[SRVSIZE];
+	memset(buffer, '0', sizeof(buffer)); 
+	//time_t ticks;
+	int connfd = 0;
+
+	while(1){
+		connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
+		if (connfd < 0) 
+			printf("ERROR on accept.\n");
+
+		//ticks = time(NULL);
+		//snprintf(buffer, sizeof(buffer), "%.24s\r\n", ctime(&ticks));
+		//write(connfd, buffer, strlen(buffer));
+		int n = read(connfd, buffer, SRVSIZE);
+		if (n < 0)
+			printf("ERROR reading from socket.\n");
+		printf("From client: %s\n", buffer);
+		if(strcmp(buffer, "MKJOB") == 0){
+			// compose and pass on a print job →(do this async when possible)←
+			printf("Got a MKJOB! Operation pending…\n");
+			
+		}
+
+		// do this in processor
+		//close(connfd);
+		sleep(1);
+	}
+}
+
+
 int main(int argc, char* argv[])
 {
 	int produce = 1;
@@ -122,39 +156,24 @@ int main(int argc, char* argv[])
 		daemon(1,0);
 	
 	/* !! start socket stuffs !! */
-	int listenfd = 0, connfd = 0;
-    struct sockaddr_in serv_addr; 
+	int listenfd = 0;
+	struct sockaddr_in serv_addr; 
 
-    char sendBuff[SRVSIZE];
-    time_t ticks; 
+	listenfd = socket(AF_INET, SOCK_STREAM, 0);
+	memset(&serv_addr, '0', sizeof(serv_addr));
 
-    listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    memset(&serv_addr, '0', sizeof(serv_addr));
-    memset(sendBuff, '0', sizeof(sendBuff)); 
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_addr.s_addr = inet_addr(SRVADDR);
+	serv_addr.sin_port = htons(SRVPORT); 
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = inet_addr(SRVADDR);
-    serv_addr.sin_port = htons(SRVPORT); 
+	bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
 
-    bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
-
-    listen(listenfd, 10); 
+	listen(listenfd, 10); 
     
-    printf("finished init of sockets!\n");
+	printf("finished init of sockets!\n");
 
-	/*
-    while(1)
-    {
-        connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
-
-        ticks = time(NULL);
-        snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
-        write(connfd, sendBuff, strlen(sendBuff)); 
-
-        close(connfd);
-        sleep(1);
-     }
-     */
+	// Start handler !! TODO !!: ←
+	handler(&serv_addr, listenfd);
 
 	// order of operation:
 	// 1. while the exit flag has not been set
