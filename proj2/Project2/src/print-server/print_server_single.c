@@ -253,8 +253,6 @@ int main(int argc, char* argv[])
 				char c = buffer[j];
 				if(c == '~'){
 					str[k] = '\0';
-					printf("\n\ni: %d\nj: %d\nk: %d\nbuffer: %s\n", i, j, k, buffer);
-					printf("str info… %d is: %s\n", (int)strlen(str), str);
 				
 					// split and add element
 					if(i == 0){
@@ -294,6 +292,9 @@ int main(int argc, char* argv[])
 					k++;
 				}
 			}
+			
+			strcat(jobstr, "PRINT\n");
+			produce = 1;
 		}
 
 		//close(connfd);
@@ -305,72 +306,77 @@ int main(int argc, char* argv[])
 		
 		// -- normal producer stuff --
 		if(produce){
-			// this gets line from stdin, get it from somewhere else
-			getline(&line, &n, stdin);
-			if(strncmp(line, "NEW", 3) == 0)
-			{
-				job = calloc(1, sizeof(struct print_job));
-				job->job_number = job_number++;
-			}
-			else if(job && strncmp(line, "FILE", 4) == 0)
-			{
-				strtok(line, ": ");
-				job->file_name = malloc(n);
-				strncpy(job->file_name, strtok(NULL, "\n"), n);
-			}
-			else if(job && strncmp(line, "NAME", 4) == 0)
-			{
-				strtok(line, ": ");
-				job->job_name = malloc(n);
-				strncpy(job->job_name, strtok(NULL, "\n"), n);
-			}
-			else if(job && strncmp(line, "DESCRIPTION", 11) == 0)
-			{
-				strtok(line, ": ");
-				job->description = malloc(n);
-				strncpy(job->description, strtok(NULL, "\n"), n);
-			}
-			else if(job && strncmp(line, "PRINTER", 7) == 0)
-			{
-				strtok(line, ": ");
-				job->group_name = malloc(n);	
-				strncpy(job->group_name, strtok(NULL, "\n"), n);
-			}
-			else if(job && strncmp(line, "PRINT", 5) == 0)
-			{
-				if(!job->group_name)
+			while(produce){
+				// this gets line from stdin, get it from somewhere else
+				
+				// scrape lines out of jobstr
+				getline(&line, &n, jobstr);
+				
+				if(strncmp(line, "NEW", 3) == 0)
 				{
-					eprintf("Trying to print without setting printer\n");
-					continue;
+					job = calloc(1, sizeof(struct print_job));
+					job->job_number = job_number++;
 				}
-				if(!job->file_name)
+				else if(job && strncmp(line, "FILE", 4) == 0)
 				{
-					eprintf("Trying to print without providing input file\n");
-					continue;
+					strtok(line, ": ");
+					job->file_name = malloc(n);
+					strncpy(job->file_name, strtok(NULL, "\n"), n);
 				}
-				for(g = printer_group_head; g; g=g->next_group)
+				else if(job && strncmp(line, "NAME", 4) == 0)
 				{
-					if(strcmp(job->group_name, g->name) == 0)
+					strtok(line, ": ");
+					job->job_name = malloc(n);
+					strncpy(job->job_name, strtok(NULL, "\n"), n);
+				}
+				else if(job && strncmp(line, "DESCRIPTION", 11) == 0)
+				{
+					strtok(line, ": ");
+					job->description = malloc(n);
+					strncpy(job->description, strtok(NULL, "\n"), n);
+				}
+				else if(job && strncmp(line, "PRINTER", 7) == 0)
+				{
+					strtok(line, ": ");
+					job->group_name = malloc(n);	
+					strncpy(job->group_name, strtok(NULL, "\n"), n);
+				}
+				else if(job && strncmp(line, "PRINT", 5) == 0)
+				{
+					if(!job->group_name)
 					{
- 						job->next_job = g->job_queue.head;
- 						g->job_queue.head = job;
- 						sem_post(&g->job_queue.num_jobs);
-						//
-						
-						job = NULL;
-						produce = 0;
-						break;
+						eprintf("Trying to print without setting printer\n");
+						continue;
+					}
+					if(!job->file_name)
+					{
+						eprintf("Trying to print without providing input file\n");
+						continue;
+					}
+					for(g = printer_group_head; g; g=g->next_group)
+					{
+						if(strcmp(job->group_name, g->name) == 0)
+						{
+	 						job->next_job = g->job_queue.head;
+	 						g->job_queue.head = job;
+	 						sem_post(&g->job_queue.num_jobs);
+							//
+							
+							job = NULL;
+							produce = 0;
+							break;
+						}
+					}
+					if(job)
+					{
+						eprintf("Invalid printer group name given: %s\n", job->group_name);
+						continue;
 					}
 				}
-				if(job)
+				else if(strncmp(line, "EXIT", 4) == 0)
 				{
-					eprintf("Invalid printer group name given: %s\n", job->group_name);
-					continue;
+					exit_flag = 1;
 				}
-			}
-			else if(strncmp(line, "EXIT", 4) == 0)
-			{
-				exit_flag = 1;
 			}
 		}else{
 			for(g = printer_group_head; g; g = g->next_group){
