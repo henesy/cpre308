@@ -87,6 +87,8 @@ printer_print(int* handle, char* driver, char* job_name, char* description, char
 	// job data
 	/*
 		!! TODO !!: Serializing this data is broken, need to fix.
+		
+		Note: should split messages after % into chunked segments of data file (from name)
 	*/
 	buffer[i] = '%';
 	i++;
