@@ -27,6 +27,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #include <semaphore.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 
 
 #include "print_job.h"
@@ -96,19 +97,24 @@ struct printer_group
 	struct print_job_list job_queue;
 };
 
+struct sockaddr_in serv_addr;
+int listenfd;
+
 /* handles incoming tcp requests over socket ;; runs forever™ */
-int
-handler(struct sockaddr_in* serv_addr, int listenfd)
+void*
+handler(void * param)
 {
 	char buffer[SRVSIZE];
 	memset(buffer, '0', sizeof(buffer)); 
 	//time_t ticks;
 	int connfd = 0;
+	fcntl(listenfd, F_SETFL, O_NONBLOCK);
 
 	while(1){
 		connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
 		if (connfd < 0) 
 			printf("ERROR on accept.\n");
+		fcntl(connfd, F_SETFL, O_NONBLOCK);
 
 		//ticks = time(NULL);
 		//snprintf(buffer, sizeof(buffer), "%.24s\r\n", ctime(&ticks));
@@ -125,6 +131,7 @@ handler(struct sockaddr_in* serv_addr, int listenfd)
 
 		// do this in processor
 		//close(connfd);
+		printf("Handler iterated!\n");
 		sleep(1);
 	}
 }
@@ -156,8 +163,7 @@ int main(int argc, char* argv[])
 		daemon(1,0);
 	
 	/* !! start socket stuffs !! */
-	int listenfd = 0;
-	struct sockaddr_in serv_addr; 
+	listenfd = 0;
 
 	listenfd = socket(AF_INET, SOCK_STREAM, 0);
 	memset(&serv_addr, '0', sizeof(serv_addr));
@@ -173,7 +179,19 @@ int main(int argc, char* argv[])
 	printf("finished init of sockets!\n");
 
 	// Start handler !! TODO !!: ←
-	handler(&serv_addr, listenfd);
+	/*
+	pthread_t handler_tid;
+	pthread_create(&handler_tid, NULL, handler, NULL);
+	//handler(&serv_addr, listenfd);
+	printf("finished create of handler!\n");
+	int err = pthread_join(handler_tid, NULL);
+	if(err != 0){
+		eprintf("Error. Failed to join handler.\n");
+		exit(err);
+	}
+	*/
+	
+	printf("going on to main handler!\n");
 
 	// order of operation:
 	// 1. while the exit flag has not been set
@@ -190,9 +208,44 @@ int main(int argc, char* argv[])
 		sem_init(&g->job_queue.num_jobs, 0, 0);
 	}
 	
+	// socket stuff
+	char buffer[SRVSIZE];
+	memset(buffer, '0', sizeof(buffer)); 
+	//time_t ticks;
+	int connfd = 0;
+	fcntl(listenfd, F_SETFL, O_NONBLOCK);
+	
 	while(!exit_flag)
 	{
+		// accept and don't block
+		connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
+		if (connfd < 0) 
+			printf("ERROR on accept.\n");
+		fcntl(connfd, F_SETFL, O_NONBLOCK);
+
+		//ticks = time(NULL);
+		//snprintf(buffer, sizeof(buffer), "%.24s\r\n", ctime(&ticks));
+		//write(connfd, buffer, strlen(buffer));
+		int sn = read(connfd, buffer, SRVSIZE);
+		if (sn < 0)
+			printf("ERROR reading from socket.\n");
+		printf("From client: %s\n", buffer);
+		
+		// process socket commands
+		if(strcmp(buffer, "MKJOB") == 0){
+			// compose and pass on a print job →(do this async when possible)←
+			printf("Got a MKJOB! Operation pending…\n");
+			
+		}
+
+		//close(connfd);
+		printf("main iterated!\n");
+		fflush(stdout);
+		sleep(1);
+		
+		// -- normal producer stuff --
 		if(produce){
+			// this gets line from stdin, get it from somewhere else
 			getline(&line, &n, stdin);
 			if(strncmp(line, "NEW", 3) == 0)
 			{
