@@ -246,12 +246,16 @@ int main(int argc, char* argv[])
 			char str[MAXELEM];
 			strcat(jobstr, "NEW\n");
 			
-			// handle~driver~job_name~desc~filename ;; 5 splits
+			// handle~driver~job_name~desc~filename~ ;; 5 splits
 			// 0 → handle ; 1 →driver ; 2 → job_name ; 3 → desc ; 4 → filename
 			int i, j, k;
-			for(i = 0, j = 0, k = 0; i < 4 && j < SRVSIZE && k < MAXELEM; k++, j++){
+			for(i = 0, j = 0, k = 0; i < 5 && j < SRVSIZE && k < MAXELEM; j++){
 				char c = buffer[j];
 				if(c == '~'){
+					str[k] = '\0';
+					printf("\n\ni: %d\nj: %d\nk: %d\nbuffer: %s\n", i, j, k, buffer);
+					printf("str info… %d is: %s\n", (int)strlen(str), str);
+				
 					// split and add element
 					if(i == 0){
 						// handle
@@ -260,25 +264,35 @@ int main(int argc, char* argv[])
 					}
 					if(i == 1){
 						// driver
-						
+						strcat(jobstr, "PRINTER ");
+						strcat(jobstr, str);
+						strcat(jobstr, "\n");
 					}
 					if(i == 2){
 						// job_name
-						
+						strcat(jobstr, "NAME ");
+						strcat(jobstr, str);
+						strcat(jobstr, "\n");
 					}
 					if(i == 3){
 						// desc
-						
+						strcat(jobstr, "DESCRIPTION ");
+						strcat(jobstr, str);
+						strcat(jobstr, "\n");
 					}
 					if(i == 4){
 						// filename
-						
+						strcat(jobstr, "FILE ");
+						strcat(jobstr, str);
+						strcat(jobstr, "\n");
 					}
 				
 					k = 0;
 					i++;
-				}else
+				}else{
 					str[k] = c;
+					k++;
+				}
 			}
 		}
 

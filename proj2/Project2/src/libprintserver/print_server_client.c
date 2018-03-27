@@ -84,32 +84,19 @@ printer_print(int* handle, char* driver, char* job_name, char* description, char
 	for(j = 0; j < strlen(description) && i < SRVSIZE; i++, j++)
 		buffer[i] = description[j];
 	
-	// job data
-	/*
-		!! TODO !!: Serializing this data is broken, need to fix.
-		
-		Note: should split messages after % into chunked segments of data file (from name)
-	*/
+	// job data (filename)
 	buffer[i] = '~';
 	i++;
-	
-	/*
-	for(j = 0; j < (sizeof(data) / sizeof(char)) && i < SRVSIZE; i++, j++)
+
+	for(j = 0; j < strlen(data) && i < SRVSIZE; i++, j++)
 		buffer[i] = data[j];
-	*/
 	
-	/* NOTE: Pushing sending file (if implemented) onto another message write. ← ←
-	int datasize = sizeof(data);
-	memcpy(buffer+i, data, datasize);
+	buffer[i] = '~';
+	i++;
+
 	
-	i += datasize;
-	
-	buffer[i] = '%';
-	buffer[i+1] = 'E';
-	buffer[i+2] = 'O';
-	buffer[i+3] = 'F';
-	i += 3;
-	*/
+	/* NOTE: Pushing sending file (if implemented) onto another message write. ← ← */
+
 	
 	if(i > SRVSIZE){
 		printf("ERROR: Send buffer overflow.\n");
