@@ -1,3 +1,5 @@
 #!/bin/bash
 
-./cli-rinter -l samplec.ps
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../libprintserver
+
+./cli-printer -l samplec.ps

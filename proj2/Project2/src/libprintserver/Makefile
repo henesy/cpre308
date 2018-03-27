@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -fPIC -c
+CFLAGS=-Wall -fPIC -ggdb -c
 LD=gcc
 LDFLAGS=-shared -Wl,-soname,libprintserver.so -o libprintserver.so
 
