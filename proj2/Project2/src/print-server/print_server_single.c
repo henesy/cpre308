@@ -25,6 +25,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #include <assert.h>
 #include <string.h>
 #include <semaphore.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 
 #include "print_job.h"
@@ -33,6 +35,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 
 #define true 1
 #define false 0
+#define SRVADDR "127.0.0.1"
+#define SRVPORT 13337
+#define SRVSIZE 512
 
 // -- GLOBAL VARIABLES -- //
 int verbose_flag = 0;
@@ -115,6 +120,41 @@ int main(int argc, char* argv[])
 	
 	if(daemonize)
 		daemon(1,0);
+	
+	/* !! start socket stuffs !! */
+	int listenfd = 0, connfd = 0;
+    struct sockaddr_in serv_addr; 
+
+    char sendBuff[SRVSIZE];
+    time_t ticks; 
+
+    listenfd = socket(AF_INET, SOCK_STREAM, 0);
+    memset(&serv_addr, '0', sizeof(serv_addr));
+    memset(sendBuff, '0', sizeof(sendBuff)); 
+
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = inet_addr(SRVADDR);
+    serv_addr.sin_port = htons(SRVPORT); 
+
+    bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
+
+    listen(listenfd, 10); 
+    
+    printf("finished init of sockets!\n");
+
+	/*
+    while(1)
+    {
+        connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
+
+        ticks = time(NULL);
+        snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
+        write(connfd, sendBuff, strlen(sendBuff)); 
+
+        close(connfd);
+        sleep(1);
+     }
+     */
 
 	// order of operation:
 	// 1. while the exit flag has not been set

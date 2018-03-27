@@ -20,6 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #define PRINT_SERVER_CLIENT_H
 
 #define nil ((void*)0)
+#define SRVADDR "127.0.0.1"
+#define SRVPORT 13337
+#define SRVSIZE 512
 
 typedef struct PRINTER_DRIVER_STRUCT printer_driver_t;
 /// A printer driver returned by printer_list_drivers()
