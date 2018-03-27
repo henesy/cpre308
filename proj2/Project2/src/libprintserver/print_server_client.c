@@ -90,7 +90,7 @@ printer_print(int* handle, char* driver, char* job_name, char* description, char
 		
 		Note: should split messages after % into chunked segments of data file (from name)
 	*/
-	buffer[i] = '%';
+	buffer[i] = '~';
 	i++;
 	
 	/*
@@ -98,6 +98,7 @@ printer_print(int* handle, char* driver, char* job_name, char* description, char
 		buffer[i] = data[j];
 	*/
 	
+	/* NOTE: Pushing sending file (if implemented) onto another message write. ← ←
 	int datasize = sizeof(data);
 	memcpy(buffer+i, data, datasize);
 	
@@ -108,6 +109,7 @@ printer_print(int* handle, char* driver, char* job_name, char* description, char
 	buffer[i+2] = 'O';
 	buffer[i+3] = 'F';
 	i += 3;
+	*/
 	
 	if(i > SRVSIZE){
 		printf("ERROR: Send buffer overflow.\n");

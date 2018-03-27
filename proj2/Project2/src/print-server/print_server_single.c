@@ -38,7 +38,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #define false 0
 #define SRVADDR "127.0.0.1"
 #define SRVPORT 13337
-#define SRVSIZE 512
+#define SRVSIZE 1024
+#define MAXELEM 512
 
 // -- GLOBAL VARIABLES -- //
 int verbose_flag = 0;
@@ -139,7 +140,7 @@ handler(void * param)
 
 int main(int argc, char* argv[])
 {
-	int produce = 1;
+	int produce = 0;
 	int n_jobs = 0;
 	struct printer_group * g;
 	struct printer * p;
@@ -211,9 +212,10 @@ int main(int argc, char* argv[])
 	// socket stuff
 	char buffer[SRVSIZE];
 	memset(buffer, '0', sizeof(buffer)); 
-	//time_t ticks;
 	int connfd = 0;
 	fcntl(listenfd, F_SETFL, O_NONBLOCK);
+	
+	char jobstr[SRVSIZE*2];
 	
 	while(!exit_flag)
 	{
@@ -223,8 +225,6 @@ int main(int argc, char* argv[])
 			printf("ERROR on accept.\n");
 		fcntl(connfd, F_SETFL, O_NONBLOCK);
 
-		//ticks = time(NULL);
-		//snprintf(buffer, sizeof(buffer), "%.24s\r\n", ctime(&ticks));
 		//write(connfd, buffer, strlen(buffer));
 		int sn = read(connfd, buffer, SRVSIZE);
 		if (sn < 0)
@@ -233,15 +233,61 @@ int main(int argc, char* argv[])
 		
 		// process socket commands
 		if(strcmp(buffer, "MKJOB") == 0){
-			// compose and pass on a print job →(do this async when possible)←
+			// compose and pass on a print job
 			printf("Got a MKJOB! Operation pending…\n");
+
+			sn = read(connfd, buffer, SRVSIZE);
+			if (sn < 0)
+				printf("ERROR reading from socket (2).\n");
+			printf("From client (2): %s\n", buffer);
 			
+			// Decode metadata
+			// see: char str[SRVSIZE*2];
+			char str[MAXELEM];
+			strcat(jobstr, "NEW\n");
+			
+			// handle~driver~job_name~desc~filename ;; 5 splits
+			// 0 → handle ; 1 →driver ; 2 → job_name ; 3 → desc ; 4 → filename
+			int i, j, k;
+			for(i = 0, j = 0, k = 0; i < 4 && j < SRVSIZE && k < MAXELEM; k++, j++){
+				char c = buffer[j];
+				if(c == '~'){
+					// split and add element
+					if(i == 0){
+						// handle
+						
+						// no-op for now…
+					}
+					if(i == 1){
+						// driver
+						
+					}
+					if(i == 2){
+						// job_name
+						
+					}
+					if(i == 3){
+						// desc
+						
+					}
+					if(i == 4){
+						// filename
+						
+					}
+				
+					k = 0;
+					i++;
+				}else
+					str[k] = c;
+			}
 		}
 
 		//close(connfd);
 		printf("main iterated!\n");
 		fflush(stdout);
 		sleep(1);
+		
+		printf("jobstr is: %s\n", jobstr);
 		
 		// -- normal producer stuff --
 		if(produce){
