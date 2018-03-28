@@ -253,10 +253,32 @@ int main(int argc, char* argv[])
 		}else if(strcmp(buffer, "GETDRIVERS") == 0){
 			// List drivers
 			printf("Got a GETDRIVERS! Operation pending…\n");
-			
 			char buf[SRVSIZE];
-			char* cmd = "HAWHAW";
-			strcpy(buf, cmd);
+			char str[SRVSIZE];
+			int count = 0;
+			
+			for(g = printer_group_head; g; g = g->next_group){
+				for(p = g->printer_queue; p; p = p->next){
+					strcat(str, p->driver.name);
+					strcat(str, "~");
+					strcat(str, g->name);
+					strcat(str, "~");
+					// always v0 as versions aren't implemented…
+					strcat(str, "v0");
+					strcat(str, "~");
+					
+					count++;
+				}
+			}
+			
+			char myint[MAXELEM];
+			sprintf(myint, "%d", count);
+			strcat(buf, myint);
+			strcat(buf, "~");
+			strcat(buf, str);
+			
+			//char* cmd = "HAWHAW";
+			//strcpy(buf, cmd);
 			if(send(connfd, buf, SRVSIZE , 0) < 0){
 				printf("ERROR: Send cmd to client failed.\n");
 			}

@@ -180,7 +180,7 @@ printer_list_drivers(int *number)
 	
 	printf("LIB: Reply is: %s\n", buffer);
 	
-	// format is: N~pname~dname~version~pname2~dname2~version2…
+	// format is: N~pname~dname~version~pname2~dname2~version2…~
 	// mode is: 0=pname, 1=dname, 2=version
 	int mode = 0;
 	int driven = 0;
