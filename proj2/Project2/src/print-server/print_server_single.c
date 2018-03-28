@@ -39,7 +39,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #define nil ((void*)0)
 #define SRVADDR "127.0.0.1"
 #define SRVPORT 13337
-#define SRVSIZE 1024
+#define SRVSIZE 2048
 #define MAXELEM 512
 
 // -- GLOBAL VARIABLES -- //
@@ -249,6 +249,10 @@ int main(int argc, char* argv[])
 			strcat(jobstr, "PRINT\n");
 			produce = 1;
 			buffer[0] = '\0';
+
+		}else{
+			// List drivers
+			
 		}
 
 		//close(connfd);

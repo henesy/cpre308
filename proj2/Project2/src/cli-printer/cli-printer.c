@@ -28,6 +28,7 @@ char * driver;
 char * job_name;
 char * description;
 char * data;
+char truedata[512];
 
 int main(int argc, char* argv[])
 {
@@ -39,9 +40,12 @@ int main(int argc, char* argv[])
 	parse_command_line(argc, argv);
 	check_job_info();
 
-	printer_print(NULL, driver, job_name, description, data);
+	//printf("TrueData before send is: %s\n", truedata);
 
-	free_pointers();
+	printer_print(NULL, driver, job_name, description, truedata);
+
+	// free was crashing cli-printer, sorry.
+	//free_pointers();
 	
 	//test_print_list();
 }
@@ -69,7 +73,7 @@ static void check_job_info() {
 	if(job_name == NULL || (strcmp(job_name, "") == 0)) {
 		
 		char* tmp = remove_ext(data, '.', '/');
-		job_name = malloc(sizeof(tmp));
+		job_name = calloc(1, sizeof(tmp));
 		strcpy(job_name, tmp);
 		if(tmp)
 			free(tmp);
@@ -131,7 +135,8 @@ static void parse_command_line(int argc, char * argv[])
 		free_pointers();
 		exit(0);
 	}
-	data = malloc(sizeof(argv[argc-1]));
+	data = calloc(1, sizeof(argv[argc-1]));
+	strcpy(truedata, argv[argc-1]);
 	strcpy(data, argv[argc-1]);
 	printf("Data: %s\n", data);
 
@@ -197,7 +202,7 @@ char *remove_ext (char* mystr, char dot, char sep) {
 
 	if (mystr == NULL)
 		return NULL;
-	if ((retstr = malloc (strlen (mystr) + 1)) == NULL)
+	if ((retstr = calloc (1, strlen (mystr) + 1)) == NULL)
 		return NULL;
 
 	// Make a copy and find the relevant characters.

@@ -45,7 +45,7 @@ printer_print(int* handle, char* driver, char* job_name, char* description, char
 		printf("ERROR: Send cmd to server failed.\n");
 		return -5;
 	}
-	printf("LIB: Cmd sent to server successfully.\n");
+	//printf("LIB: Cmd sent to server successfully.\n");
 	
 	/* add everything into the buffer for serialization */
 	for(i = 0; i < SRVSIZE; i++)
@@ -101,17 +101,19 @@ printer_print(int* handle, char* driver, char* job_name, char* description, char
 	if(i > SRVSIZE){
 		printf("ERROR: Send buffer overflow.\n");
 		return -3;
-	}else
-		printf("LIB: i was: %d\n", i);
+	}else{
+		//printf("LIB: i was: %d\n", i);
+	}
 	
-	printf("LIB: Buffer follows…\n");
+	/*printf("LIB: Buffer follows…\n");
 	int l;
 	for(l = 0; l <= i; l++)
 		putchar(buffer[l]);
 	printf("\nLIB: Buffer ends…\n");
+	*/
 	
 	// Send to server
-	printf("LIB: Begin writing to server…\n");
+	//printf("LIB: Begin writing to server…\n");
 	
 	if(send(socket_desc, buffer, SRVSIZE , 0) < 0){
 		printf("ERROR: Send to server failed.\n");
