@@ -1,0 +1,34 @@
+The server listens on 127.0.0.1:13337
+The client will expect to connect to 127.0.0.1:13337
+To change the default port change the #define'd constants in libprintserver/print_server_client.h and print-server/print_server_single.c
+
+To build and run the virt-printer system with reasonable defaults:
+
+	cd print-server/printer
+	make clean; make
+	./start
+
+To build and run the print-server:
+
+	cd print-server
+	make clean; make
+	./main -d
+
+To build the library:
+
+	cd libprintserver
+	make clean; make
+
+To build and run the cli-printer program with a reasonable demo:
+
+	cd cli-printer
+	make clean; make
+	./run-cli-printer-list.sh # demo the listing of drivers
+	./run-cli-printer-print.sh # demo the printing of samplec.ps
+
+---
+
+Note: A record of a demonstration with expected input/output is included near the end of the report pdf document.
+
+Once printed, pdf documents appear in print-server/printer/.
+
