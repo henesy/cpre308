@@ -250,9 +250,20 @@ int main(int argc, char* argv[])
 			produce = 1;
 			buffer[0] = '\0';
 
-		}else{
+		}else if(strcmp(buffer, "GETDRIVERS") == 0){
 			// List drivers
+			printf("Got a GETDRIVERS! Operation pending…\n");
 			
+			char buf[SRVSIZE];
+			char* cmd = "HAWHAW";
+			strcpy(buf, cmd);
+			if(send(connfd, buf, SRVSIZE , 0) < 0){
+				printf("ERROR: Send cmd to client failed.\n");
+			}
+			printf("Cmd sent to client successfully.\n");
+
+			
+			buffer[0] = '\0';
 		}
 
 		//close(connfd);
