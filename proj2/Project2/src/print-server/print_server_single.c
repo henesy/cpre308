@@ -180,15 +180,16 @@ int main(int argc, char* argv[])
 		int sn = read(connfd, buffer, SRVSIZE);
 		if (sn < 0)
 			printf("ERROR reading from socket.\n");
-		printf("From client: %s\n", buffer);
+		//printf("From client: %s\n", buffer);
 		
 		// process socket commands
+		jobstr[0] = '\0';
 		if(strcmp(buffer, "MKJOB") == 0){
 			// compose and pass on a print job
 			printf("Got a MKJOB! Operation pending…\n");
 
 			sn = read(connfd, buffer, SRVSIZE);
-			if (sn < 0)
+			if(sn < 0)
 				printf("ERROR reading from socket (2).\n");
 			printf("From client (2): %s\n", buffer);
 			
@@ -246,14 +247,16 @@ int main(int argc, char* argv[])
 			
 			strcat(jobstr, "PRINT\n");
 			produce = 1;
+			buffer[0] = '\0';
 		}
 
 		//close(connfd);
-		printf("main iterated!\n");
+		//printf("main iterated!\n");
 		fflush(stdout);
 		sleep(1);
 		
-		printf("jobstr is: %s\n", jobstr);
+		if(sn >= 0)
+			printf("jobstr is: %s\n", jobstr);
 		
 		// -- normal producer stuff --
 		if(produce){
@@ -277,10 +280,10 @@ int main(int argc, char* argv[])
 					posjob++;
 				}
 				
-				printf("Got line: \"%s\"\n", line);
+				//printf("Got line: \"%s\"\n", line);
 				
 				if(strlen(line) < 2){
-					printf("Input block processed, ending production.\n");
+					//printf("Input block processed, ending production.\n");
 					produce = 0;
 					jobstr[0] = '\0';
 					break;
@@ -289,47 +292,42 @@ int main(int argc, char* argv[])
 				
 				if(strncmp(line, "NEW", 3) == 0)
 				{
-					printf("→ GOT NEW\n");
+					//printf("→ GOT NEW\n");
 					job = calloc(1, sizeof(struct print_job));
 					job->job_number = job_number++;
 				}
 				else if(job && strncmp(line, "FILE", 4) == 0)
 				{
-					printf("→ GOT FILE\n");
+					//printf("→ GOT FILE\n");
 					strtok(line, ": ");
 					job->file_name = malloc(n);
 					strncpy(job->file_name, strtok(NULL, "\n"), n);
 				}
 				else if(job && strncmp(line, "NAME", 4) == 0)
 				{
-					printf("→ GOT NAME\n");
+					//printf("→ GOT NAME\n");
 					strtok(line, ": ");
 					job->job_name = malloc(n);
 					strncpy(job->job_name, strtok(NULL, "\n"), n);
 				}
 				else if(job && strncmp(line, "DESCRIPTION", 11) == 0)
 				{
-					printf("→ GOT DESCRIPTION\n");
+					//printf("→ GOT DESCRIPTION\n");
 					strtok(line, ": ");
 					job->description = malloc(n);
 					strncpy(job->description, strtok(NULL, "\n"), n);
 				}
 				else if(job && strncmp(line, "PRINTER", 7) == 0)
 				{
-					printf("→ GOT PRINTER\n");
+					//printf("→ GOT PRINTER\n");
 					strtok(line, ": ");
 					
-					//fuck your strtok
-					//int z = 0;
-					//for(z = 0; z < strlen(line)
-					
-					printf("Line after strtok: %s\n", line);
 					job->group_name = calloc(1, n);	
 					strncpy(job->group_name, strtok(NULL, "\n"), n);
 				}
 				else if(job && strncmp(line, "PRINT", 5) == 0)
 				{
-					printf("→ GOT PRINT\n");
+					//printf("→ GOT PRINT\n");
 					if(!job->group_name)
 					{
 						eprintf("Trying to print without setting printer\n");
@@ -362,7 +360,7 @@ int main(int argc, char* argv[])
 				}
 				else if(strncmp(line, "EXIT", 4) == 0)
 				{
-					printf("→ GOT EXIT\n");
+					//printf("→ GOT EXIT\n");
 					exit_flag = 1;
 				}
 			}
