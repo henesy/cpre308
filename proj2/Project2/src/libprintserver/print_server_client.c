@@ -199,6 +199,7 @@ printer_list_drivers(int *number)
 	}
 
 	int count = atoi(countstr);
+	*number = count;
 	
 	//printf("LIB: Count is: %d\n", count);
 	
