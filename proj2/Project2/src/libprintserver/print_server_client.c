@@ -59,7 +59,7 @@ printer_print(int* handle, char* driver, char* job_name, char* description, char
 		for(i = 0, j = 0; j < strlen(handlestr) && i < SRVSIZE; i++, j++)
 			buffer[i] = handlestr[j];
 	}else{
-		printf("LIB: No handle being serialized.\n");
+		//printf("LIB: No handle being serialized.\n");
 		i = 0;
 	}
 
@@ -119,7 +119,8 @@ printer_print(int* handle, char* driver, char* job_name, char* description, char
 		printf("ERROR: Send to server failed.\n");
 		return -4;
 	}
-	printf("LIB: Buffer sent to server successfully.\n");
+	//printf("LIB: Buffer sent to server successfully.\n");
+	printf("LIB: Jobs successfully transmitted to server.\n");
 
 	return 0;
 }
@@ -164,7 +165,7 @@ printer_list_drivers(int *number)
 		printf("ERROR: Send cmd to server failed.\n");
 		return nil;
 	}
-	printf("LIB: Cmd sent to server successfully.\n");
+	//printf("LIB: Cmd sent to server successfully.\n");
 	
 	/* get info from server */
 	for(i = 0; i < SRVSIZE; i++)
@@ -178,7 +179,7 @@ printer_list_drivers(int *number)
 	}
 	printf("LIB: Reply received.\n");
 	
-	printf("LIB: Reply is: %s\n", buffer);
+	//printf("LIB: Reply is: %s\n", buffer);
 	
 	// format is: N~pname~dname~version~pname2~dname2~version2…~
 	// mode is: 0=pname, 1=dname, 2=version
@@ -230,7 +231,7 @@ printer_list_drivers(int *number)
 				drivers[driven]->driver_version = calloc(MAXNAME, sizeof(char));
 				strcpy(drivers[driven]->driver_version, str);
 				
-				printf("LIB: adding printer named: %s\n", drivers[driven]->printer_name);
+				//printf("LIB: adding printer named: %s\n", drivers[driven]->printer_name);
 				
 				driven++;
 				mode = 0;
