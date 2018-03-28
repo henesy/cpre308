@@ -172,13 +172,14 @@ int main(int argc, char* argv[])
 	{
 		// accept and don't block
 		connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
-		if (connfd < 0) 
-			printf("\nERROR on accept.\n");
+		if(connfd < 0)
+			printf("\nNothing to accept, sleeping.\n");
+		
 		fcntl(connfd, F_SETFL, O_NONBLOCK);
 
 		//write(connfd, buffer, strlen(buffer));
 		int sn = read(connfd, buffer, SRVSIZE);
-		if (sn < 0)
+		if (sn < 0 && connfd >= 0)
 			printf("ERROR reading from socket.\n");
 		//printf("From client: %s\n", buffer);
 		
@@ -186,12 +187,12 @@ int main(int argc, char* argv[])
 		jobstr[0] = '\0';
 		if(strcmp(buffer, "MKJOB") == 0){
 			// compose and pass on a print job
-			printf("Got a MKJOB! Operation pending…\n");
+			printf("\nGot a MKJOB! Operation pending…\n");
 
 			sn = read(connfd, buffer, SRVSIZE);
 			if(sn < 0)
 				printf("ERROR reading from socket (2).\n");
-			printf("From client (2): %s\n", buffer);
+			//printf("From client (2): %s\n", buffer);
 			
 			// Decode metadata
 			// see: char str[SRVSIZE*2];
@@ -256,7 +257,7 @@ int main(int argc, char* argv[])
 		sleep(1);
 		
 		if(sn >= 0)
-			printf("jobstr is: %s\n", jobstr);
+			printf("Job string from client is: \n%s\n", jobstr);
 		
 		// -- normal producer stuff --
 		if(produce){
