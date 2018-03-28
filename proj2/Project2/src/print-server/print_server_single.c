@@ -141,9 +141,9 @@ int main(int argc, char* argv[])
 
 	listen(listenfd, 10); 
     
-	printf("finished init of sockets!\n");
+	eprintf("finished init of sockets!\n");
 	
-	printf("going on to main handler!\n");
+	eprintf("going on to main handler!\n");
 
 	// order of operation:
 	// 1. while the exit flag has not been set
@@ -173,25 +173,25 @@ int main(int argc, char* argv[])
 		// accept and don't block
 		connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
 		if(connfd < 0)
-			printf("\nNothing to accept, sleeping.\n");
+			eprintf("\nNothing to accept, sleeping.\n");
 		
 		fcntl(connfd, F_SETFL, O_NONBLOCK);
 
 		//write(connfd, buffer, strlen(buffer));
 		int sn = read(connfd, buffer, SRVSIZE);
 		if (sn < 0 && connfd >= 0)
-			printf("ERROR reading from socket.\n");
+			eprintf("ERROR reading from socket.\n");
 		//printf("From client: %s\n", buffer);
 		
 		// process socket commands
 		jobstr[0] = '\0';
 		if(strcmp(buffer, "MKJOB") == 0){
 			// compose and pass on a print job
-			printf("\nGot a MKJOB! Operation pending…\n");
+			eprintf("\nGot a MKJOB! Operation pending…\n");
 
 			sn = read(connfd, buffer, SRVSIZE);
 			if(sn < 0)
-				printf("ERROR reading from socket (2).\n");
+				eprintf("ERROR reading from socket (2).\n");
 			//printf("From client (2): %s\n", buffer);
 			
 			// Decode metadata
@@ -252,7 +252,7 @@ int main(int argc, char* argv[])
 
 		}else if(strcmp(buffer, "GETDRIVERS") == 0){
 			// List drivers
-			printf("Got a GETDRIVERS! Operation pending…\n");
+			eprintf("Got a GETDRIVERS! Operation pending…\n");
 			char buf[SRVSIZE];
 			char str[SRVSIZE];
 			int count = 0;
@@ -280,9 +280,9 @@ int main(int argc, char* argv[])
 			//char* cmd = "HAWHAW";
 			//strcpy(buf, cmd);
 			if(send(connfd, buf, SRVSIZE , 0) < 0){
-				printf("ERROR: Send cmd to client failed.\n");
+				eprintf("ERROR: Send cmd to client failed.\n");
 			}
-			printf("Cmd sent to client successfully.\n");
+			//printf("Cmd sent to client successfully.\n");
 
 			
 			buffer[0] = '\0';
@@ -290,11 +290,13 @@ int main(int argc, char* argv[])
 
 		//close(connfd);
 		//printf("main iterated!\n");
-		fflush(stdout);
+		//fflush(stdout);
 		sleep(1);
 		
+		
 		if(sn >= 0)
-			printf("Job string from client is: \n%s\n", jobstr);
+			eprintf("Job string from client is: \n%s\n", jobstr);
+		
 		
 		// -- normal producer stuff --
 		if(produce){
@@ -321,7 +323,7 @@ int main(int argc, char* argv[])
 				//printf("Got line: \"%s\"\n", line);
 				
 				if(strlen(line) < 2){
-					//printf("Input block processed, ending production.\n");
+					eprintf("Input block processed, ending production.\n");
 					produce = 0;
 					jobstr[0] = '\0';
 					break;
@@ -422,7 +424,7 @@ int main(int argc, char* argv[])
 							// There is only one item in the list
 							p->job_queue->head = NULL;
  			
-	 					printf("consumed job %s\n", job->job_name);
+	 					eprintf("consumed job %s\n", job->job_name);
  		
  						// send the job to the printer
 						printer_print(&p->driver, job);
