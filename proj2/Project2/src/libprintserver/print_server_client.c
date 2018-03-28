@@ -184,12 +184,64 @@ printer_list_drivers(int *number)
 	// mode is: 0=pname, 1=dname, 2=version
 	int mode = 0;
 	int driven = 0;
-	printer_driver_t* drivers = calloc(MAXDRIVERS, sizeof(MAXDRIVERS));
-	char str[MAXNAME];
-	for(i = 0; i < SRVSIZE && driven < MAXDRIVERS; i++){
-		// populate array of drivers
-		
+	
+	// read out leading count of driver no's
+	char countstr[MAXNAME];
+	for(i = 0; i < SRVSIZE && i < MAXNAME; i++){
+		char c = buffer[i];
+		if(c == '~'){
+			countstr[i] = '\0';
+			i++;
+			break;
+		}
+		countstr[i] = c;
 	}
 
-	return nil;
+	int count = atoi(countstr);
+	
+	//printf("LIB: Count is: %d\n", count);
+	
+	printer_driver_t** drivers = calloc(count, sizeof(printer_driver_t*));
+	int z;
+	for(z = 0; z < count; z++)
+		drivers[z] = calloc(1, sizeof(printer_driver_t));
+	
+	char str[MAXNAME];
+	
+	int j;
+	for(j = 0; i < SRVSIZE && driven < count && j < MAXNAME; i++){
+		// populate array of drivers
+		char c = buffer[i];
+		if(c == '~'){
+			str[j] = '\0';
+			
+			if(mode == 0){
+				// printer_name
+				drivers[driven]->printer_name = calloc(MAXNAME, sizeof(char));
+				strcpy(drivers[driven]->printer_name, str);
+				mode++;
+			}else if(mode == 1){
+				// driver_name
+				drivers[driven]->driver_name = calloc(MAXNAME, sizeof(char));
+				strcpy(drivers[driven]->driver_name, str);
+				mode++;
+			}else if(mode == 2){
+				// driver_version
+				drivers[driven]->driver_version = calloc(MAXNAME, sizeof(char));
+				strcpy(drivers[driven]->driver_version, str);
+				
+				printf("LIB: adding printer named: %s\n", drivers[driven]->printer_name);
+				
+				driven++;
+				mode = 0;
+			}
+			
+			j = 0;
+		}else{
+			str[j] = c;
+			j++;
+		}
+	}
+
+	return drivers;
 }
