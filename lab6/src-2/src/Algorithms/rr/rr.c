@@ -20,11 +20,11 @@ int init_module(void)
 {
 	handle = register_scheduler(SCHEDULER_NAME, &sops);
 	if(handle < 0){
-		eprintf("Failed registering scheduler FCFS with error %d\n", handle);
+		eprintf("Failed registering scheduler RR with error %d\n", handle);
 		return handle;
 	}
 	else{
-		dprintf("Registered scheduler FCFS\n");
+		dprintf("Registered scheduler RR\n");
 	}
 	return 0;
 }
