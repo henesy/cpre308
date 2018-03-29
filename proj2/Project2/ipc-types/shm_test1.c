@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <time.h>
 
 #include "shm_test.h"
 
@@ -55,7 +56,12 @@ int main(int argc, char** argv)
 	{
 		shared_mem->an_array[i] = i*i;
 	}
-	char my_string[] = "I am a string allocated on main's stack!";
+	
+	time_t rawtime;
+	time (&rawtime);
+	char my_string[512];
+	sprintf(my_string, "%s", ctime(&rawtime));
+	
 	shared_mem->a_ptr = my_string;
 	sleep(5);
 	printf("a_string = \"%s\"\n", shared_mem->a_string);
