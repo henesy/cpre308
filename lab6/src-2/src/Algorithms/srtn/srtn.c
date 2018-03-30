@@ -20,12 +20,9 @@ const struct scheduler_operations sops;
 
 int verbose_flag = 1;
 
-// the total runtime counted by the scheduler
-int runtime = 0;
-
 static int handle;
 
-static struct task *head = NULL, *tail = NULL;
+static struct task *head = NULL;
 
 int init_module(void)
 {
@@ -49,21 +46,23 @@ void cleanup_module(void)
 struct task* 
 srtn_enqueue(struct task* r, struct task* t)
 {
-	runtime++;
+	metadata* mt;
 
 	// t is the task to add
 	if(t->scheduler_data == nil){
-		metadata* mt = calloc(1, sizeof(metadata));
+		mt = calloc(1, sizeof(metadata));
 		mt->last_guess = 2*(4 - t->task_info->priority);
 		mt->last_runtime = 0;
 		t->scheduler_data = mt;
 	}else{
-		metadata* mt = (metadata*)t->scheduler_data;
-		mt->last_runtime = t->task_info->run_time - runtime;
+		mt = (metadata*) t->scheduler_data;
+		mt->last_runtime = t->task_info->run_time - mt->last_runtime;
+		mt->last_guess = 0.2*mt->last_guess + 0.8*mt->last_runtime;
+		t->scheduler_data = mt;
 	}
 
 	// add t to the queue
-	if(head == NULL){
+	if(head == nil){
 		head = t;
 		t->next = head;
 		t->prev = head;
@@ -76,37 +75,30 @@ srtn_enqueue(struct task* r, struct task* t)
 		t->next = head;
 	}
 	
-	// estimate run times and find lowest time
-	int lowest_guess = -1;
-	struct task* lowest = nil;
-	struct task* cursor = head;
-	
-	while(1){
-		if(cursor) == nil
-			break;
+	if(head == nil){
+		head = t;
+		t->next = head;
+		t->prev	= head;
+	}else{
+		metadata* mt1;
+		mt = (metadata*) t->scheduler_data;
+		mt1 = (metadata*) r->scheduler_data;
 		
-		metadata* mt = (metadata*) t->scheduler_data;
-		int new_guess = 0.2 * mt->last_guess + 0.8 * mt->last_runtime;
-		
-		if(lowest_guess < 0){
-			lowest = cursor;
-			lowest_guess = new_guess;
-		}else if(new_guess < lowest_guess){
-			lowest = cursor;
-			lowest_guess = new_guess;
+		while(mt1->last_guess < mt->last_guess){
+			if(r == head){
+				break;
+			}
+			r = r->next;
+			mt1 = (metadata*) r->scheduler_data;
 		}
-		
-		cursor = cursor->next;
+
+		r->prev->next = t;
+		t->prev	= r->prev;
+		r->prev = t;
+		t->next	= r;
+		head = r;
 	}
-	
-	// make the lowest element the new head
-	if(head == lowest)
-		return head;
-	
-	if(lowest->next != nil){
-		
-	}
-	
+
 	return head;
 }
 
