@@ -1,4 +1,5 @@
 bin/*
 Debian\-Jessie\-AMD64\-root_fs
 linux\-4\.10\.1/*
+*.o
 
