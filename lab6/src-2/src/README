@@ -1,0 +1,4 @@
+All algorithms are implemented and their waveforms should be in the Scheduler/ directory. 
+
+The custom scheduling algorithm is `rrr` which implements a cousin of `prr` which randomly manages priorities on a bias. 
+

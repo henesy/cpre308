@@ -60,21 +60,8 @@ srtn_enqueue(struct task* r, struct task* t)
 		mt->last_guess = 0.2*mt->last_guess + 0.8*mt->last_runtime;
 		t->scheduler_data = mt;
 	}
-
-	// add t to the queue
-	if(head == nil){
-		head = t;
-		t->next = head;
-		t->prev = head;
-
-		return head;
-	}else{
-		head->prev->next = t;
-		t->prev = head->prev;
-		head->prev = t;
-		t->next = head;
-	}
 	
+	// sort
 	if(head == nil){
 		head = t;
 		t->next = head;
@@ -85,9 +72,8 @@ srtn_enqueue(struct task* r, struct task* t)
 		mt1 = (metadata*) r->scheduler_data;
 		
 		while(mt1->last_guess < mt->last_guess){
-			if(r == head){
+			if(r == head)
 				break;
-			}
 			r = r->next;
 			mt1 = (metadata*) r->scheduler_data;
 		}
@@ -119,5 +105,4 @@ const struct scheduler_operations sops =
 {
 	.task_enqueue = srtn_enqueue,
 	.task_dequeue = srtn_dequeue,
-	.period = 1
 };
