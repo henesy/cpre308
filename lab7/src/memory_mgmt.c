@@ -9,6 +9,15 @@
 
 int seed = 0;
 
+// Track which algorithm we're in for use by Opt
+typedef enum Algos Algos;
+enum Algos {
+	alg_rand,
+	alg_seq,
+	alg_work
+};
+Algos algo;
+
 /* Structure to hold a page information */
 typedef struct {
   int page_id;  /* The page ID number. If no page exits, it is set to -1 */
@@ -201,37 +210,40 @@ int main ()
   int i;
   for(i = 0; i < NUM_RUNS; i++) {
   	/* Memory access analysis with random access */
+  	algo = alg_rand;
   	initialize_page_frames(PageFrames,NUM_FRAMES);
   	build_random_access_seq(PageAccesses,NUM_ACCESSES);
   	PageFaultTotals.page_faults_FIFO_rand += handle_page_accesses(PageFrames,NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_FIFO);
-  	//initialize_page_frames(PageFrames,NUM_FRAMES);
-  	//PageFaultTotals.page_faults_LRU_rand += handle_page_accesses(PageFrames,NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_LRU);
-  	//initialize_page_frames(PageFrames,NUM_FRAMES);
-  	//PageFaultTotals.page_faults_OPT_rand += handle_page_accesses(PageFrames,NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_OPT);
+  	initialize_page_frames(PageFrames,NUM_FRAMES);
+  	PageFaultTotals.page_faults_LRU_rand += handle_page_accesses(PageFrames,NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_LRU);
+  	initialize_page_frames(PageFrames,NUM_FRAMES);
+  	PageFaultTotals.page_faults_OPT_rand += handle_page_accesses(PageFrames,NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_OPT);
 	//initialize_page_frames(PageFrames,NUM_FRAMES);
 	//PageFaultTotals.page_faults_CUST_rand += handle_page_accesses(PageFrames, NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_CUST);
   
   
   	/* Memory access analysis with sequential access */
+  	algo = alg_seq;
   	initialize_page_frames(PageFrames,NUM_FRAMES);
   	build_sequential_access_seq(PageAccesses,NUM_ACCESSES); 
   	PageFaultTotals.page_faults_FIFO_seq += handle_page_accesses(PageFrames,NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_FIFO);
-  	//initialize_page_frames(PageFrames,NUM_FRAMES);
-  	//PageFaultTotals.page_faults_LRU_seq += handle_page_accesses(PageFrames,NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_LRU);
-  	//initialize_page_frames(PageFrames,NUM_FRAMES);
-  	//PageFaultTotals.page_faults_OPT_seq += handle_page_accesses(PageFrames,NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_OPT);
+  	initialize_page_frames(PageFrames,NUM_FRAMES);
+  	PageFaultTotals.page_faults_LRU_seq += handle_page_accesses(PageFrames,NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_LRU);
+  	initialize_page_frames(PageFrames,NUM_FRAMES);
+  	PageFaultTotals.page_faults_OPT_seq += handle_page_accesses(PageFrames,NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_OPT);
 	//initialize_page_frames(PageFrames,NUM_FRAMES);
 	//PageFaultTotals.page_faults_CUST_seq += handle_page_accesses(PageFrames, NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_CUST);
   
     
   	/* Memory access analysis with LR workload access */
+  	algo = alg_work;
   	initialize_page_frames(PageFrames,NUM_FRAMES);
   	build_lr_workload_access_seq(PageAccesses,NUM_ACCESSES);
   	PageFaultTotals.page_faults_FIFO_lr += handle_page_accesses(PageFrames,NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_FIFO);
-  	//initialize_page_frames(PageFrames,NUM_FRAMES);
-  	//PageFaultTotals.page_faults_LRU_lr += handle_page_accesses(PageFrames,NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_LRU);
-  	//initialize_page_frames(PageFrames,NUM_FRAMES);
-  	//PageFaultTotals.page_faults_OPT_lr += handle_page_accesses(PageFrames,NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_OPT);
+  	initialize_page_frames(PageFrames,NUM_FRAMES);
+  	PageFaultTotals.page_faults_LRU_lr += handle_page_accesses(PageFrames,NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_LRU);
+  	initialize_page_frames(PageFrames,NUM_FRAMES);
+  	PageFaultTotals.page_faults_OPT_lr += handle_page_accesses(PageFrames,NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_OPT);
 	//initialize_page_frames(PageFrames,NUM_FRAMES);
 	//PageFaultTotals.page_faults_CUST_lr += handle_page_accesses(PageFrames, NUM_FRAMES,PageAccesses,NUM_ACCESSES,PRAlgo_CUST);
 		
@@ -239,18 +251,18 @@ int main ()
   }
 
   printf("The average number of page faults for FIFO with Random Access is %d.\n",PageFaultTotals.page_faults_FIFO_rand / NUM_RUNS);
-  //printf("The average number of page faults for LRU with Random Access is %d.\n",PageFaultTotals.page_faults_LRU_rand / NUM_RUNS);
-  //printf("The average number of page faults for OPT with Random Access is %d.\n",PageFaultTotals.page_faults_OPT_rand / NUM_RUNS);
+  printf("The average number of page faults for LRU with Random Access is %d.\n",PageFaultTotals.page_faults_LRU_rand / NUM_RUNS);
+  printf("The average number of page faults for OPT with Random Access is %d.\n",PageFaultTotals.page_faults_OPT_rand / NUM_RUNS);
   //printf("The average number of page faults for CUST with Random Access is %d.\n",PageFaultTotals.page_faults_CUST_rand / NUM_RUNS);
   	
   printf("The average number of page faults for FIFO with Sequential Access is %d.\n",PageFaultTotals.page_faults_FIFO_seq / NUM_RUNS);
-  //printf("The average number of page faults for LRU with Sequential Access is %d.\n",PageFaultTotals.page_faults_LRU_seq / NUM_RUNS);
-  //printf("The average number of page faults for OPT with Sequential Access is %d.\n",PageFaultTotals.page_faults_OPT_seq / NUM_RUNS);
+  printf("The average number of page faults for LRU with Sequential Access is %d.\n",PageFaultTotals.page_faults_LRU_seq / NUM_RUNS);
+  printf("The average number of page faults for OPT with Sequential Access is %d.\n",PageFaultTotals.page_faults_OPT_seq / NUM_RUNS);
   //printf("The average number of page faults for CUST with Sequential Access is %d.\n",PageFaultTotals.page_faults_CUST_seq / NUM_RUNS);
   	
   printf("The average number of page faults for FIFO with LR Workload Access is %d.\n",PageFaultTotals.page_faults_FIFO_lr / NUM_RUNS);
-  //printf("The average number of page faults for LRU with LR Workload Access is %d.\n",PageFaultTotals.page_faults_LRU_lr / NUM_RUNS);
-  //printf("The average number of page faults for OPT with LR Workload Access is %d.\n",PageFaultTotals.page_faults_OPT_lr / NUM_RUNS);
+  printf("The average number of page faults for LRU with LR Workload Access is %d.\n",PageFaultTotals.page_faults_LRU_lr / NUM_RUNS);
+  printf("The average number of page faults for OPT with LR Workload Access is %d.\n",PageFaultTotals.page_faults_OPT_lr / NUM_RUNS);
   //printf("The average number of page faults for CUST with LR Workload Access is %d.\n",PageFaultTotals.page_faults_CUST_lr / NUM_RUNS);
 
   return 0;
@@ -277,3 +289,69 @@ int PRAlgo_FIFO(const PageFrame * PageFrames, int num_frames, const int * PageAc
   
   return index_with_least_arrival_time; 
 }
+
+/* Returns the next page that is going to be replaced */
+int
+PRAlgo_LRU(const PageFrame * PageFrames, int num_frames, const int * PageAccesses, int num_accesses, int current_access)
+{
+	int least_time_of_access = PageFrames[0].time_of_access;
+	int index_with_least_access_time = 0;
+	int i;
+
+	for(i = 1; i < num_frames; i++)
+		if(PageFrames[i].time_of_access < least_time_of_access){
+			least_time_of_access = PageFrames[i].time_of_access;
+			index_with_least_access_time = i;
+	    }
+  
+	return index_with_least_access_time; 
+}
+
+/* Returns the next page that is going to be replaced ;; uses Algos algo to know what can come next */
+int
+PRAlgo_OPT(const PageFrame * PageFrames, int num_frames, const int * PageAccesses, int num_accesses, int current_access)
+{
+	int index_optimal = 0;
+	int i;
+	
+	// Sequential dictates the last page id is accessed last
+	if(algo == alg_seq){
+		int maxid = PageFrames[0].page_id;
+		for(i = 1; i < num_frames; i++){
+			if(PageFrames[i].page_id > maxid)
+				maxid = i;
+		}
+		return maxid;
+	}
+
+	// Random picks a number between 1 and 128 at random, so we will pick a number at random as well
+	if(algo == alg_rand){
+		int page_id = rand() % num_frames;
+		for(i = 0; i < num_frames; i++)
+			if(i == page_id)
+				return i;
+	}
+	
+	// Workload (LR) has a 0.9% chance that the next page is among the 5 pages that were most recently accessed ;; we pick the oldest page
+	if(algo == alg_work){
+		int least_time_of_access = PageFrames[0].time_of_access;
+		int index_with_least_access_time = 0;
+
+		for(i = 1; i < num_frames; i++)
+			if(PageFrames[i].time_of_access < least_time_of_access){
+				least_time_of_access = PageFrames[i].time_of_access;
+				index_with_least_access_time = i;
+		    }
+		return index_with_least_access_time;
+	}
+  
+	return index_optimal;
+}
+
+/* Returns the next page that is going to be replaced 
+int
+PRAlgo_CUST(const PageFrame * PageFrames, int num_frames, const int * PageAccesses, int num_accesses, int current_access)
+{
+	
+}
+*/
