@@ -12,7 +12,7 @@
 #include <stdint.h>
 
 #define SIZE 32  /* size of the read buffer */
-#define debug 1
+#define debug 0
 //define PRINT_HEX // un-comment this to print the values in hex for debugging
 
 struct BootSector
@@ -85,20 +85,12 @@ unsigned short endianSwap(unsigned char one, unsigned char two)
 	return 0x0000;
 }
 
-
+/* !! The lab machines are little endian, so this should work consistenly (tested on lab machine) */
 // Converts two characters to int (unsigned short) -- I'd rather use this than endianSwap
 int
 two2int(unsigned char buffer[], int i)
 {
 	return ((buffer[i+1] << 8) & 0xFF00) | (buffer[i] & 0xFF);
-}
-
-
-// Converts one character to int (unsigned short)
-int
-one2int(unsigned char buffer[], int i)
-{
-	buffer[i] & 0xFF;
 }
 
 
@@ -118,7 +110,7 @@ void decodeBootSector(struct BootSector * pBootS, unsigned char buffer[])
 	free(name);
     
 	// Read bytes/sector and convert to big endian -- 11-12
-	int bytesec = ((buffer[12] << 8) & 0xFF00) | (buffer[11] & 0xFF);
+	int bytesec = two2int(buffer, 11);
 	if(debug)
 		printf("BYTESEC: %d\n", bytesec);
 	pBootS->iBytesSector = bytesec;
@@ -129,26 +121,28 @@ void decodeBootSector(struct BootSector * pBootS, unsigned char buffer[])
 		printf("SECCLUST: %d\n", secclust);
 	pBootS->iSectorsCluster = secclust;
 	
-	pBootS->iReservedSectors = ((buffer[15] << 8) & 0xFF00) | (buffer[14] & 0xFF);
+	pBootS->iReservedSectors = two2int(buffer, 14);
 	
 	pBootS->iNumberFATs = buffer[16] & 0xFF;
     
 	// Read root entries, logicical sectors and medium descriptor -- 17-18, 19-20, 21
-	pBootS->iRootEntries = ((buffer[18] << 8) & 0xFF00) | (buffer[17] & 0xFF);
+	pBootS->iRootEntries = two2int(buffer, 17);
 	
-	pBootS->iLogicalSectors = ((buffer[20] << 8) & 0xFF00) | (buffer[19] & 0xFF);
+	pBootS->iLogicalSectors = two2int(buffer, 19);
 	
+	// Use the raw hex ☺
 	pBootS->xMediumDescriptor = buffer[21];
     
 	// Read and covert sectors/fat, sectors/track, and number of heads -- 22-23, 24-25, 26-27
-	pBootS->iSectorsFAT = ((buffer[23] << 8) & 0xFF00) | (buffer[22] & 0xFF);
+	pBootS->iSectorsFAT = two2int(buffer, 22);
 	
-	pBootS->iSectorsTrack = ((buffer[25] << 8) & 0xFF00) | (buffer[24] & 0xFF);
+	pBootS->iSectorsTrack = two2int(buffer, 24);
 	
-	pBootS->iHeads = ((buffer[27] << 8) & 0xFF00) | (buffer[26] & 0xFF);
+	pBootS->iHeads = two2int(buffer, 26);
     
-	// Read hidden sectors -- 28-31
-	
+	// Read hidden sectors -- 28-31 (4 byte value)
+	int32_t hidsec = ((buffer[31]) << 24) | ((buffer[30]) << 16) | ((buffer[29]) << 8) | (buffer[28]);
+	pBootS->iHiddenSectors = hidsec;
     
 	return;
 }
