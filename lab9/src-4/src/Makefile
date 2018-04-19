@@ -10,5 +10,4 @@ bytedump: bytedump.c
 	$(CC) -o bytedump $(CFLAGS) bytedump.c
 
 clean: 
-	rm a.out
 	rm fat12ls

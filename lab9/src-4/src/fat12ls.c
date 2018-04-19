@@ -4,6 +4,8 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -11,6 +13,7 @@
 #define SIZE 32      /* size of the read buffer */
 #define ROOTSIZE 256 /* max size of the root directory */
 //define PRINT_HEX   // un-comment this to print the values in hex for debugging
+#define nil ((void*)0)
 
 struct BootSector
 {
@@ -50,17 +53,17 @@ char * toDOSName(char string[], unsigned char buffer[], int offset);
 //       the directory array, offset points to the location of the filename
 // Post: fills and returns a string containing the filename in 8.3 format
 
-char * parseAttributes(char string[], unsigned char key);
+char * parseAttributes(unsigned char buffer[], int);
 //  Pre: String is initialized with at least five characters, key contains
 //       the byte containing the attribue from the directory buffer
 // Post: fills the string with the attributes
 
-char * parseTime(char string[], unsigned short usTime);
+char * parseTime(unsigned char buffer[], int);
 //  Pre: string is initialzied for at least 9 characters, usTime contains
 //       the 16 bits used to store time
 // Post: string contains the formatted time
 
-char * parseDate(char string[], unsigned short usDate);
+char * parseDate(unsigned char buffer[], int);
 //  Pre: string is initialized for at least 13 characters, usDate contains
 //       the 16 bits used to store the date
 // Post: string contains the formatted date
@@ -108,31 +111,75 @@ int main(int argc, char * argv[])
 
 
 // Converts two characters to an unsigned short with two, one
-unsigned short endianSwap(unsigned char one, unsigned char two)
-{
-    // This is stub code!
-    return 0x0000;
-}
+//unsigned short endianSwap(unsigned char one, unsigned char two)
+//{
+//   // This is stub code!
+//    return 0x0000;
+//}
 
+/* !! The lab machines are little endian, so this should work consistenly (tested on lab machine) */
+// Converts two characters to int (unsigned short) -- I'd rather use this than endianSwap
+int
+two2int(unsigned char buffer[], int i)
+{
+	return ((buffer[i+1] << 8) & 0xFF00) | (buffer[i] & 0xFF);
+}
 
 // Fills out the BootSector Struct from the buffer
 void decodeBootSector(struct BootSector * pBootS, unsigned char buffer[])
 {
     int i = 3;  // Skip the first 3 bytes
     
-    // Pull the name and put it in the struct (remember to null-terminate)
+   	// Pull the name and put it in the struct (remember to null-terminate) -- 3-10
+	char* name = calloc(9, sizeof(char));
+	for(; i < 11; i++)
+		name[i-3] = buffer[i];
+	name[7] = '\0';
+	strcpy(pBootS->sName, name);
+	free(name);
     
-    // Read bytes/sector and convert to big endian
+	// Read bytes/sector and convert to big endian -- 11-12
+	int bytesec = two2int(buffer, 11);
+	pBootS->iBytesSector = bytesec;
     
-    // Read sectors/cluster, Reserved sectors and Number of Fats
+	// Read sectors/cluster, Reserved sectors and Number of Fats -- 13, 14-15, 16
+	int secclust = buffer[13] & 0xFF;
+	pBootS->iSectorsCluster = secclust;
+	
+	pBootS->iReservedSectors = two2int(buffer, 14);
+	
+	pBootS->iNumberFATs = buffer[16] & 0xFF;
     
-    // Read root entries, logicical sectors and medium descriptor
+	// Read root entries, logicical sectors and medium descriptor -- 17-18, 19-20, 21
+	pBootS->iRootEntries = two2int(buffer, 17);
+	
+	pBootS->iLogicalSectors = two2int(buffer, 19);
+	
+	// Use the raw hex ☺
+	pBootS->xMediumDescriptor = buffer[21];
     
-    // Read and covert sectors/fat, sectors/track, and number of heads
+	// Read and covert sectors/fat, sectors/track, and number of heads -- 22-23, 24-25, 26-27
+	pBootS->iSectorsFAT = two2int(buffer, 22);
+	
+	pBootS->iSectorsTrack = two2int(buffer, 24);
+	
+	pBootS->iHeads = two2int(buffer, 26);
     
-    // Read hidden sectors
+	// Read hidden sectors -- 28-31 (4 byte value)
+	int32_t hidsec = ((buffer[31]) << 24) | ((buffer[30]) << 16) | ((buffer[29]) << 8) | (buffer[28]);
+	pBootS->iHiddenSectors = hidsec;
     
     return;
+}
+
+
+// If the filename starts with 0x00, it’s not a valid entry.  If it starts with 0xE5, it’s also an invalid entry, but it has been released/deleted.
+int
+validfile(unsigned char buffer[], int offset)
+{
+	if(buffer[offset] == 0xE5 || buffer[offset] == 0x00)
+		return 0;
+	return 1;
 }
 
 
@@ -142,23 +189,30 @@ void parseDirectory(int iDirOff, int iEntries, unsigned char buffer[])
 {
     int i = 0;
     char string[13];
+    int entrywidth = 32;
+    int nameoff = 0;
+    int attroff = 8 + 3;
+    int timeoff = 8 + 3 + 1 + 10;
+    int dateoff = 8 + 3 + 1 + 10 + 2;
+    int sizeoff = 8 + 3 + 1 + 10 + 2 + 2 +2;
     
     // Display table header with labels
-    printf("Filename\tAttrib\tTime\t\tDate\t\tSize\n");
+    printf("Filename\tAttrib\tTime\t\tDate\t\tSize (bytes)\n");
     
     // loop through directory entries to print information for each
-    for(i = 0; i < (iEntries); i = i + /* entry width */)   {
-    	if (  /* valid file */ ) {
-    		// Display filename
-    		printf("%s\t", toDOSName(string, buffer, /*name offset*/)  );
+    for(i = 0; i < (iEntries); i = i + entrywidth)   {
+    	if (validfile(buffer, i)) {
+    		// Display filename -- filename . extension ☺
+    		printf("%s\t", toDOSName(string, buffer, i+nameoff)  );
     		// Display Attributes
-    		printf("%s\t", parseAttributes(string, /* attr offset */)  );
+    		printf("%s\t", parseAttributes(buffer, i+attroff)  );
     		// Display Time
-    		printf("%s\t", parseTime(string, /*time offsets */ )  );
+    		printf("%s\t", parseTime(buffer, i+timeoff)  );
     		// Display Date
-    		printf("%s\t", parseDate(string, /*date offsets */ )  );
-    		// Display Size
-    		printf("%d\n", /* size offsets */ );
+    		printf("%s\t", parseDate(buffer, i+dateoff)  );
+    		// Display Size -- use 4 byte little endian magic used in boot sector code
+    		int32_t fsize = ((buffer[i+sizeoff+3]) << 24) | ((buffer[i+sizeoff+2]) << 16) | ((buffer[i+sizeoff+1]) << 8) | (buffer[i+sizeoff]);
+    		printf("%d\n", fsize);
     	}
     }
     
@@ -167,18 +221,83 @@ void parseDirectory(int iDirOff, int iEntries, unsigned char buffer[])
 } // end parseDirectory()
 
 
-// Parses the attributes bits of a file
-char * parseAttributes(char string[], unsigned char key)
+// convert a char to a binary string
+char*
+char2bin(char c)
 {
-    // This is stub code!
-    return string;
+	char* str = calloc(9, sizeof(char));
+	int i, j = 0;
+    for (i = 7; i >= 0; --i, j++){
+        str[j] = ((c & (1 << i)) ? '1' : '0');
+    }
+    str[8] = '\0';
+	return str;
+}
+
+
+// Function to reverse a string
+void
+reverse(char* str )
+{ 
+    int i, j, len;
+    char* tmp = calloc(strlen(str)+1, sizeof(char));
+      
+    // calculating length of the string
+    len = strlen(str);
+      
+    for(j = 0, i = len-1; i >= 0; i--, j++)
+		tmp[j] = str[i];
+	
+	tmp[j] = '\0';
+	strcpy(str, tmp);
+	free(tmp);
+}
+
+
+// Parses the attributes bits of a file
+char * parseAttributes(unsigned char buffer[], int offset)
+{
+	char* attrstr = calloc(5, sizeof(char));
+	char attr[9];
+	int i;
+	strcpy(attrstr, "----");
+	
+	
+	strcpy(attr, char2bin(buffer[offset]));
+	reverse(attr);
+	
+	//sprintf(attr, "%x", buffer[offset]);
+	//printf("\n[ATTRBIN: %s]\n", attr);
+	
+	for(i = 0; i < 8; i++){
+		if(i == 0 && attr[i] == '1')
+			attrstr[0] = 'R';
+		if(i == 1 && attr[i] == '1')
+			attrstr[1] = 'H';
+		if(i == 2 && attr[i] == '1')
+			attrstr[2] = 'S';
+		if(i == 5 && attr[i] == '1')
+			attrstr[3] = 'A';
+	}
+	
+	attrstr[4] = '\0';
+    return attrstr;
 } // end parseAttributes()
 
 
 // Decodes the bits assigned to the time of each file
-char * parseTime(char string[], unsigned short usTime)
+char * parseTime(unsigned char buffer[], int offset)
 {
     unsigned char hour = 0x00, min = 0x00, sec = 0x00;
+    char datebin[17];
+    char* string = calloc(9, sizeof(char));
+    int i;
+    
+    // Reverse order of the bits after translating them so we can parse them nicely
+	//printf("\n[DATE: %x,%x]\n", buffer[offset], buffer[offset+1]);
+	strcpy(datebin, char2bin(buffer[offset+1]));
+	strcat(datebin, char2bin(buffer[offset]));
+	//printf("\n[DATEBIN: %s]\n", datebin);
     
     // DEBUG: printf("time: %x", usTime);
     
@@ -193,10 +312,11 @@ char * parseTime(char string[], unsigned short usTime)
 
 
 // Decodes the bits assigned to the date of each file
-char * parseDate(char string[], unsigned short usDate)
+char * parseDate(unsigned char buffer[], int offset)
 {
     unsigned char month = 0x00, day = 0x00;
     unsigned short year = 0x0000;
+    char* string = calloc(11, sizeof(char));
     
     //printf("date: %x", usDate);
     
@@ -212,7 +332,32 @@ char * parseDate(char string[], unsigned short usDate)
 // Formats a filename string as DOS (adds the dot to 8-dot-3)
 char * toDOSName(char string[], unsigned char buffer[], int offset)
 {
-    // This is stub code!
+	// filename is 8 bytes, ext is 3 bytes, insert a '.'
+	int i;
+	char* name = calloc(9, sizeof(char));
+	char* ext = calloc(4, sizeof(char));
+	for(i = 0; i < 8; i++){
+		// Don't copy spaces for now -- should check if only whitespace pads the right side of name to strip ☺
+		if(buffer[offset+i-1] != 0x20)
+			name[i] = buffer[offset+i];
+		else
+			name[i] = '\0';
+	}
+	//name[7] = '\0';
+	for(; i-8 < 3; i++)
+		ext[i-8] = buffer[offset+i];
+	ext[3] = '\0';
+	
+	//printf("NAME: %s\n", name);
+	//printf("EXT: %s\n", ext);
+	
+	strcpy(string, name);
+	strcat(string, ".");
+	strcat(string, ext);
+	
+	free(name);
+	free(ext);
+
     return string;
 } // end toDosNameRead-Only Bit
 
