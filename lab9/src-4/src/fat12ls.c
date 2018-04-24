@@ -364,6 +364,8 @@ parseDate(unsigned char buffer[], int offset)
 	year = bin2int(syear);
 	month = bin2int(smon);
 	day = bin2int(sday);
+	// Since year offset is 1980
+	year += 1980;
     
     //printf("date: %x", usDate);
     
