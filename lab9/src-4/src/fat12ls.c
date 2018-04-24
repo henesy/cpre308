@@ -235,6 +235,14 @@ char2bin(char c)
 }
 
 
+// Convert a binary string to an int
+int
+bin2int(char* str)
+{
+	return (int) strtol(str, nil, 2);
+}
+
+
 // Function to reverse a string
 void
 reverse(char* str )
@@ -255,7 +263,8 @@ reverse(char* str )
 
 
 // Parses the attributes bits of a file
-char * parseAttributes(unsigned char buffer[], int offset)
+char*
+parseAttributes(unsigned char buffer[], int offset)
 {
 	char* attrstr = calloc(5, sizeof(char));
 	char attr[9];
@@ -286,18 +295,36 @@ char * parseAttributes(unsigned char buffer[], int offset)
 
 
 // Decodes the bits assigned to the time of each file
-char * parseTime(unsigned char buffer[], int offset)
+char*
+parseTime(unsigned char buffer[], int offset)
 {
-    unsigned char hour = 0x00, min = 0x00, sec = 0x00;
+    int hour = 0, min = 0, sec = 0;
     char datebin[17];
     char* string = calloc(9, sizeof(char));
     int i;
     
-    // Reverse order of the bits after translating them so we can parse them nicely
+    // Reversing the order of the string gave invalid time values, so don't reverse I suppose
 	//printf("\n[DATE: %x,%x]\n", buffer[offset], buffer[offset+1]);
-	strcpy(datebin, char2bin(buffer[offset+1]));
-	strcat(datebin, char2bin(buffer[offset]));
+	strcpy(datebin, char2bin(buffer[offset]));
+	strcat(datebin, char2bin(buffer[offset+1]));
+	//reverse(datebin);
 	//printf("\n[DATEBIN: %s]\n", datebin);
+	
+	char shour[6];
+	char smin[7];
+	char ssec[6];
+	strncpy(shour, datebin, 5);
+	strncpy(smin, datebin+5, 6);
+	strncpy(ssec, datebin+11, 5);
+	shour[5] = '\0';
+	smin[6] = '\0';
+	ssec[5] = '\0';
+	
+	hour = bin2int(shour);
+	min = bin2int(smin);
+	sec = bin2int(ssec);
+	// Since every other second is counted
+	sec *= 2;
     
     // DEBUG: printf("time: %x", usTime);
     
