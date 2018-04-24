@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <limits.h>
 
 #define SIZE 32      /* size of the read buffer */
 #define ROOTSIZE 256 /* max size of the root directory */
@@ -58,12 +59,12 @@ char * parseAttributes(unsigned char buffer[], int);
 //       the byte containing the attribue from the directory buffer
 // Post: fills the string with the attributes
 
-char * parseTime(unsigned char buffer[], int);
+char * parseTime(unsigned char buffer[], unsigned short usTime);
 //  Pre: string is initialzied for at least 9 characters, usTime contains
 //       the 16 bits used to store time
 // Post: string contains the formatted time
 
-char * parseDate(unsigned char buffer[], int);
+char * parseDate(unsigned char buffer[], unsigned short);
 //  Pre: string is initialized for at least 13 characters, usDate contains
 //       the 16 bits used to store the date
 // Post: string contains the formatted date
@@ -111,14 +112,15 @@ int main(int argc, char * argv[])
 
 
 // Converts two characters to an unsigned short with two, one
-//unsigned short endianSwap(unsigned char one, unsigned char two)
-//{
-//   // This is stub code!
-//    return 0x0000;
-//}
+unsigned short
+endianSwap(unsigned char one, unsigned char two){
+	unsigned short s = two;
+	s = (s << 8) | one;
+	return s;
+}
 
 /* !! The lab machines are little endian, so this should work consistenly (tested on lab machine) */
-// Converts two characters to int (unsigned short) -- I'd rather use this than endianSwap
+// Converts two characters to int (unsigned short)
 int
 two2int(unsigned char buffer[], int i)
 {
@@ -207,9 +209,9 @@ void parseDirectory(int iDirOff, int iEntries, unsigned char buffer[])
     		// Display Attributes
     		printf("%s\t", parseAttributes(buffer, i+attroff)  );
     		// Display Time
-    		printf("%s\t", parseTime(buffer, i+timeoff)  );
+    		printf("%s\t", parseTime(buffer, endianSwap(buffer[i+timeoff], buffer[i+timeoff+1]))  );
     		// Display Date
-    		printf("%s\t", parseDate(buffer, i+dateoff)  );
+    		printf("%s\t", parseDate(buffer, endianSwap(buffer[i+dateoff], buffer[i+dateoff+1]))  );
     		// Display Size -- use 4 byte little endian magic used in boot sector code
     		int32_t fsize = ((buffer[i+sizeoff+3]) << 24) | ((buffer[i+sizeoff+2]) << 16) | ((buffer[i+sizeoff+1]) << 8) | (buffer[i+sizeoff]);
     		printf("%d\n", fsize);
@@ -294,38 +296,30 @@ parseAttributes(unsigned char buffer[], int offset)
 } // end parseAttributes()
 
 
+// Reverse bits in a byte
+unsigned char
+reversebits(unsigned char v)
+{
+    unsigned char r = v;
+    int s = sizeof(v) * CHAR_BIT - 1;
+    for (v >>= 1; v; v >>= 1) {
+        r <<= 1; r |= v & 1; s--;
+    }
+    return r << s;
+}
+
+
 // Decodes the bits assigned to the time of each file
 char*
-parseTime(unsigned char buffer[], int offset)
+parseTime(unsigned char buffer[], unsigned short usTime)
 {
-    int hour = 0, min = 0, sec = 0;
-    char datebin[17];
+	unsigned char hour = 0, min = 0, sec = 0;
     char* string = calloc(9, sizeof(char));
-    int i;
-    
-    // Reversing the order of the string gave invalid time values, so don't reverse I suppose
-	//printf("\n[DATE: %x,%x]\n", buffer[offset], buffer[offset+1]);
-	strcpy(datebin, char2bin(buffer[offset]));
-	strcat(datebin, char2bin(buffer[offset+1]));
-	//reverse(datebin);
-	//printf("\n[DATEBIN: %s]\n", datebin);
-	
-	char shour[6];
-	char smin[7];
-	char ssec[6];
-	strncpy(shour, datebin, 5);
-	strncpy(smin, datebin+5, 6);
-	strncpy(ssec, datebin+11, 5);
-	
-	hour = bin2int(shour);
-	min = bin2int(smin);
-	sec = bin2int(ssec);
-	// Since every other second is counted
-	sec *= 2;
     
     // DEBUG: printf("time: %x", usTime);
-    
-    // This is stub code!
+    hour = (0xF800 & usTime) >> 11;
+    min = (0x7E0 & usTime) >> 5;
+    sec = (0x1F & usTime) << 1;
     
     sprintf(string, "%02i:%02i:%02i", hour, min, sec);
     
@@ -337,39 +331,15 @@ parseTime(unsigned char buffer[], int offset)
 
 // Decodes the bits assigned to the date of each file
 char *
-parseDate(unsigned char buffer[], int offset)
+parseDate(unsigned char buffer[], unsigned short usDate)
 {
     unsigned char month = 0x00, day = 0x00;
     unsigned short year = 0x0000;
-    //char* string = calloc(11, sizeof(char));
-    
-	char datebin[17];
-    char* string = calloc(9, sizeof(char));
-    int i;
-    
-    // Reversing the order of the string gave invalid time values, so don't reverse I suppose
-	//printf("\n[DATE: %x,%x]\n", buffer[offset], buffer[offset+1]);
-	strcpy(datebin, char2bin(buffer[offset]));
-	strcat(datebin, char2bin(buffer[offset+1]));
-	//reverse(datebin);
-	//printf("\n[DATEBIN: %s]\n", datebin);
-	
-	char syear[8];
-	char smon[5];
-	char sday[6];
-	strncpy(syear, datebin, 7);
-	strncpy(smon, datebin+7, 4);
-	strncpy(sday, datebin+11, 5);
-	
-	year = bin2int(syear);
-	month = bin2int(smon);
-	day = bin2int(sday);
-	// Since year offset is 1980
-	year += 1980;
-    
-    //printf("date: %x", usDate);
-    
-    // This is stub code!
+    char* string = calloc(13, sizeof(char));
+
+    year = ((0xFE00 & usDate) >> 9) + 0x7BC;
+    month = (0x1E0 & usDate) >> 5;
+    day = (0x1F & usDate);
     
     sprintf(string, "%d/%d/%d", year, month, day);
     
