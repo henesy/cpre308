@@ -316,9 +316,6 @@ parseTime(unsigned char buffer[], int offset)
 	strncpy(shour, datebin, 5);
 	strncpy(smin, datebin+5, 6);
 	strncpy(ssec, datebin+11, 5);
-	shour[5] = '\0';
-	smin[6] = '\0';
-	ssec[5] = '\0';
 	
 	hour = bin2int(shour);
 	min = bin2int(smin);
@@ -339,11 +336,34 @@ parseTime(unsigned char buffer[], int offset)
 
 
 // Decodes the bits assigned to the date of each file
-char * parseDate(unsigned char buffer[], int offset)
+char *
+parseDate(unsigned char buffer[], int offset)
 {
     unsigned char month = 0x00, day = 0x00;
     unsigned short year = 0x0000;
-    char* string = calloc(11, sizeof(char));
+    //char* string = calloc(11, sizeof(char));
+    
+	char datebin[17];
+    char* string = calloc(9, sizeof(char));
+    int i;
+    
+    // Reversing the order of the string gave invalid time values, so don't reverse I suppose
+	//printf("\n[DATE: %x,%x]\n", buffer[offset], buffer[offset+1]);
+	strcpy(datebin, char2bin(buffer[offset]));
+	strcat(datebin, char2bin(buffer[offset+1]));
+	//reverse(datebin);
+	//printf("\n[DATEBIN: %s]\n", datebin);
+	
+	char syear[8];
+	char smon[5];
+	char sday[6];
+	strncpy(syear, datebin, 7);
+	strncpy(smon, datebin+7, 4);
+	strncpy(sday, datebin+11, 5);
+	
+	year = bin2int(syear);
+	month = bin2int(smon);
+	day = bin2int(sday);
     
     //printf("date: %x", usDate);
     
